@@ -119,10 +119,31 @@ app.post('/api/ai', async (req, res) => {
 });
 
 // 2. Local Database GET Endpoint
-app.get('/api/data/:collection', (req, res) => {
+app.get('/api/data/:collection', async (req, res) => {
+  const collection = req.params.collection;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnon = process.env.SUPABASE_ANON_KEY;
+
+  if (supabaseUrl && supabaseAnon) {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/${collection}?select=*`, {
+        method: "GET",
+        headers: {
+          "apikey": supabaseAnon,
+          "Authorization": `Bearer ${supabaseAnon}`
+        }
+      });
+      if (response.ok) {
+        const rows = await response.json();
+        return res.json(rows);
+      }
+    } catch (e) {
+      console.error("Supabase GET proxy failed. Falling back to local file database.", e);
+    }
+  }
+
   try {
     const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-    const collection = req.params.collection;
     if (data[collection]) {
       res.json(data[collection]);
     } else {
@@ -134,12 +155,35 @@ app.get('/api/data/:collection', (req, res) => {
 });
 
 // 3. Local Database POST Endpoint
-app.post('/api/data/:collection', (req, res) => {
+app.post('/api/data/:collection', async (req, res) => {
+  const collection = req.params.collection;
+  const payload = req.body;
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnon = process.env.SUPABASE_ANON_KEY;
+
+  if (supabaseUrl && supabaseAnon) {
+    try {
+      const response = await fetch(`${supabaseUrl}/rest/v1/${collection}`, {
+        method: "POST",
+        headers: {
+          "apikey": supabaseAnon,
+          "Authorization": `Bearer ${supabaseAnon}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) {
+        const items = await response.json();
+        return res.json({ success: true, item: items[0] || payload });
+      }
+    } catch (e) {
+      console.error("Supabase POST proxy failed. Falling back to local file database.", e);
+    }
+  }
+
   try {
     const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-    const collection = req.params.collection;
-    const payload = req.body;
-
     if (!data[collection]) {
       data[collection] = [];
     }
