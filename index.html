@@ -756,42 +756,58 @@
         </button>
       </div>
 
+      <!-- Navigation tabs inside jobs -->
+      <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
+        <button onclick="toggleRozgarTabs('board')" id="tab-btn-board" class="text-indigo-400 border-b-2 border-indigo-500 pb-1 focus:outline-none">Jobs Board</button>
+        <button onclick="toggleRozgarTabs('applications')" id="tab-btn-applications" class="pb-1 focus:outline-none">My Applications (<span id="applied-jobs-count">0</span>)</button>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Job Search Grid -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="glass rounded-xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Rural & Local Job Opportunities</h3>
-              <select id="job-role-filter" onchange="renderJobs()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2.5 py-1 text-white">
-                <option value="all">All Sectors</option>
-                <option value="govt">Government Schemes</option>
-                <option value="office">Office & Digital (Remote)</option>
-                <option value="field">Agri & Supervision</option>
-              </select>
+          <div id="rozgar-board-tab" class="space-y-4">
+            <div class="glass rounded-xl p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Rural & Local Job Opportunities</h3>
+                <select id="job-role-filter" onchange="renderJobs()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2.5 py-1 text-white">
+                  <option value="all">All Sectors</option>
+                  <option value="govt">Government Schemes</option>
+                  <option value="office">Office & Digital (Remote)</option>
+                  <option value="field">Agri & Supervision</option>
+                </select>
+              </div>
+              <div id="jobs-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Rendered via JS -->
+              </div>
             </div>
-            <div id="jobs-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Rendered via JS -->
+
+            <!-- Interview Chat -->
+            <div class="glass rounded-xl p-5 space-y-4 flex flex-col h-[350px]">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">AI Mock Interview Simulator</h3>
+              <div class="flex-grow overflow-y-auto p-2 space-y-2 border border-indigo-950 rounded-lg custom-scroll text-xs" id="interview-chat-box">
+                <div class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%]">
+                  Welcome to your mock interview panel! Select a role below and click start to begin the conversation.
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <select id="interview-role" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2 text-white">
+                  <option value="operator">Data Entry Assistant</option>
+                  <option value="supervisor">Field Inspector</option>
+                </select>
+                <input id="interview-input" type="text" placeholder="Type your response..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded p-2 text-xs text-white">
+                <button onclick="startVoiceInput('interview-input')" class="px-2.5 bg-indigo-900 rounded border border-indigo-700/50 text-slate-300">
+                  <i data-lucide="mic" class="w-4 h-4"></i>
+                </button>
+                <button onclick="sendInterviewMessage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold text-white transition">Answer</button>
+              </div>
             </div>
           </div>
 
-          <!-- Interview Chat -->
-          <div class="glass rounded-xl p-5 space-y-4 flex flex-col h-[350px]">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">AI Mock Interview Simulator</h3>
-            <div class="flex-grow overflow-y-auto p-2 space-y-2 border border-indigo-950 rounded-lg custom-scroll text-xs" id="interview-chat-box">
-              <div class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%]">
-                Welcome to your mock interview panel! Select a role below and click start to begin the conversation.
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <select id="interview-role" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2 text-white">
-                <option value="operator">Data Entry Assistant</option>
-                <option value="supervisor">Field Inspector</option>
-              </select>
-              <input id="interview-input" type="text" placeholder="Type your response..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded p-2 text-xs text-white">
-              <button onclick="startVoiceInput('interview-input')" class="px-2.5 bg-indigo-900 rounded border border-indigo-700/50 text-slate-300">
-                <i data-lucide="mic" class="w-4 h-4"></i>
-              </button>
-              <button onclick="sendInterviewMessage()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold text-white transition">Answer</button>
+          <!-- My Applications Tab (New Feature!) -->
+          <div id="rozgar-applications-tab" class="glass rounded-xl p-5 space-y-4 hidden min-h-[400px]">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Job Application Tracker</h3>
+            <div id="applied-jobs-list" class="space-y-3 text-xs">
+              <p class="text-muted text-center py-10">No active applications. Apply to local jobs above to track updates.</p>
             </div>
           </div>
         </div>
@@ -893,17 +909,27 @@
             <div id="invoice-preview" class="hidden bg-white text-slate-900 p-4 rounded border text-xs space-y-1 font-mono"></div>
           </div>
 
-          <!-- Business Logo Creator -->
+          <!-- Business Logo Creator (New Feature!) -->
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="palette" class="w-4 h-4 text-amber-400"></i> Business Brand Logo Generator
+              <i data-lucide="palette" class="w-4 h-4 text-amber-400"></i> Brand Logo Downloader (PNG)
             </h3>
-            <div class="flex gap-2">
-              <input id="logo-text-input" type="text" placeholder="Type Shop Name..." class="flex-grow bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white">
-              <button onclick="generateLogo()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold text-white">Generate Logo</button>
-            </div>
-            <div class="flex justify-center p-3 bg-indigo-950/20 rounded border border-indigo-950">
-              <canvas id="logo-canvas" width="200" height="80" class="border border-indigo-900 rounded"></canvas>
+            <p class="text-xs text-muted">Generate a custom visual banner card logo for your shop and save it directly.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div class="space-y-3">
+                <input id="logo-text-input" type="text" placeholder="Shop Name..." class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white" oninput="generateLogo()">
+                <div class="flex gap-2">
+                  <button onclick="changeLogoColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 border border-white"></button>
+                  <button onclick="changeLogoColor('#6366f1')" class="w-6 h-6 rounded-full bg-indigo-500 border border-white"></button>
+                  <button onclick="changeLogoColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 border border-white"></button>
+                </div>
+                <button onclick="downloadLogo()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold text-white transition">
+                  Download Logo Image (.png)
+                </button>
+              </div>
+              <div class="flex justify-center items-center p-3 bg-indigo-950/20 rounded border border-indigo-950">
+                <canvas id="logo-canvas" width="200" height="80" class="border border-indigo-900 rounded"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -1122,7 +1148,7 @@
 
   </main>
 
-  <!-- ================= BHARATBOT FLOATING CHAT PANEL (New Feature!) ================= -->
+  <!-- ================= BHARATBOT FLOATING CHAT PANEL ================= -->
   <div id="bharatbot-chat" class="fixed bottom-20 right-4 z-50 flex flex-col items-end">
     <!-- Chat Icon Toggle Button -->
     <button onclick="toggleBharatBot()" class="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-600 to-emerald-500 hover:from-indigo-500 hover:to-emerald-400 text-white flex items-center justify-center shadow-2xl transition-all transform hover:scale-110 active:scale-95 focus:outline-none">
@@ -1298,7 +1324,7 @@
         supabaseAnon: '',
         resend: ''
       },
-      user: null, // holds profile details
+      user: null, 
       savedPlans: [],
       healthLogs: [],
       ledger: [],
@@ -1307,7 +1333,8 @@
       notices: [],
       streakCount: 0,
       vaccinations: {},
-      offlineQueue: []
+      offlineQueue: [],
+      jobsApplied: []
     };
 
     // Initialize LocalStorage Database
@@ -1346,6 +1373,7 @@
       }
 
       if (!state.offlineQueue) state.offlineQueue = [];
+      if (!state.jobsApplied) state.jobsApplied = [];
       updateOfflineQueueBanner();
 
       // Show/Hide Auth Screen based on user profile existence
@@ -1424,6 +1452,7 @@
       } else if (moduleName === 'rozgar') {
         renderJobs();
         initExamList();
+        toggleRozgarTabs('board');
       } else if (moduleName === 'skill') {
         renderQuizQuestion();
       } else if (moduleName === 'health') {
@@ -1480,6 +1509,7 @@
       document.getElementById('user-greeting').innerText = `Namaste, ${state.user.name}! (${state.user.district}, ${state.user.state})`;
       document.getElementById('dash-role-text').innerText = state.user.role.toUpperCase();
       document.getElementById('dash-streak').innerText = `${state.streakCount} Days`;
+      document.getElementById('applied-jobs-count').innerText = state.jobsApplied.length;
     }
 
     // ================= SETTINGS PANEL =================
@@ -1673,7 +1703,7 @@
       return "Rainy / Stormy";
     }
 
-    // ================= DUAL MOCK / CLAUDE AI QUERY WRAPPER =================
+    // ================= RULE-BASED EXPERT AI SYSTEM (New Feature!) =================
     async function queryAI(prompt, systemInstruction = "") {
       if (state.credentials.claude) {
         try {
@@ -1681,50 +1711,86 @@
             method: "POST",
             headers: {
               "x-api-key": state.credentials.claude,
-              "anthropic-version": "2023-06-01",
-              "content-type": "application/json"
+              "anthropic-version": "2023-sonnet"
             },
             body: JSON.stringify({
-              model: "claude-3-5-sonnet-20241022",
-              max_tokens: 1024,
-              system: systemInstruction,
+              model: "claude-3-5-sonnet",
               messages: [{ role: "user", content: prompt }]
             })
           });
           const data = await response.json();
-          if (data.content && data.content[0]) {
-            return data.content[0].text;
-          }
+          if (data.content) return data.content[0].text;
         } catch (e) {
-          console.error("Direct Claude Call failed.", e);
+          console.error("Claude call failed, routing to local expert engine.", e);
         }
       }
 
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(getMockResponse(prompt));
-        }, 1200);
-      });
+      return parseLocalExpertSystem(prompt, systemInstruction);
     }
 
-    function getMockResponse(prompt) {
+    function parseLocalExpertSystem(prompt, systemInstruction) {
       const p = prompt.toLowerCase();
-      if (p.includes('yellow rust') || p.includes('leaf') || p.includes('pest')) {
-        return `🌿 **KisanAI Plant Pathology Diagnosis:**\n\n**Suspected Defect:** Wheat Stripe Rust (Puccinia striiformis).\n\n**Remedy Plan:**\n1. Spray **Propiconazole 25% EC** @ 200 ml mixed in 200 liters of water per acre.\n2. Ensure adequate drainage to decrease surface moisture.\n3. Nitrogen application should be paused temporarily to limit vegetative leaf density.`;
+      const stateName = state.user ? state.user.state : "Haryana";
+      const districtName = state.user ? state.user.district : "Bhiwani";
+      const userName = state.user ? state.user.name : "Citizen";
+
+      // 1. KisanAI Crop Doctor & Advisor Rules
+      if (p.includes('crop:') || p.includes('symptoms:')) {
+        if (p.includes('rice') || p.includes('paddy')) {
+          if (p.includes('brown') || p.includes('spots')) {
+            return `🌾 **KisanAI Plant Pathology Report:**\n\n**Diagnosis:** Brown Spot disease (Cochliobolus miyabeanus) detected.\n\n**Remedy Plan:**\n1. Spray **Mancozeb 75% WP** @ 2g per liter of water.\n2. Apply balanced nutrients, especially Potassium (K) to boost crop immunity.\n3. **Organic Treatment:** Spray neem oil extract 5% mixed with mild soap emulsifier.`;
+          }
+          return `🌾 **KisanAI Paddy advisory:** Maintain shallow ponding water level (2-5 cm) at tillering phase. Soil health card recommends applying 40kg Nitrogen per acre in split doses.`;
+        }
+        if (p.includes('wheat') || p.includes('kanak')) {
+          if (p.includes('yellow') || p.includes('rust') || p.includes('spots')) {
+            return `🌾 **KisanAI Plant Pathology Report:**\n\n**Diagnosis:** Yellow Stripe Rust (Puccinia striiformis) detected.\n\n**Remedy Plan:**\n1. Spray **Propiconazole 25% EC** @ 200 ml mixed in 200 liters of water per acre.\n2. Pause nitrogen fertilizer application temporarily as it feeds the fungus.\n3. **Organic Treatment:** Spray copper oxychloride formulations or fermented buttermilk sprays.`;
+          }
+          return `🌾 **KisanAI Wheat advisory:** Plan third irrigation cycle at crown root initiation phase. Soil nitrogen index is optimal for ${districtName} region.`;
+        }
+        if (p.includes('cotton') || p.includes('kapas')) {
+          if (p.includes('pink') || p.includes('boll') || p.includes('worm')) {
+            return `🌾 **KisanAI Plant Pathology Report:**\n\n**Diagnosis:** Pink Bollworm (Pectinophora gossypiella) infestation.\n\n**Remedy Plan:**\n1. Deploy **Pheromone Traps** @ 5 traps per acre to monitor moth populations.\n2. If damage exceeds 10%, spray **Profenofos 50% EC** @ 2 ml/liter of water.\n3. Clear crop residues immediately after harvest to disrupt insect pupation.`;
+          }
+          return `🌾 **KisanAI Cotton advisory:** Maintain deep weeding intervals. Soil drainage is key to avoid root rot in black cotton soil.`;
+        }
+        return `🌾 **KisanAI Crop Advisory:**\n\nYour crop description has been evaluated. For general leaf spots and blight, maintain clean spacing, remove infected crop residues, and spray generic **Copper Oxychloride 50% WP** @ 3g/liter. For organic options, use Trichoderma viride bio-pesticide.`;
       }
-      if (p.includes('mentor') || p.includes('learn') || p.includes('study')) {
-        return `📚 **Study Mentor Advice:**\n\nTo build a career in Frontend Web Development, practice formatting UI structures in HTML/CSS daily. Start building 3 landing page mockups. Next, master Javascript DOM manipulation. You do not need expensive machines; use online code editors on your phone.`;
+
+      // 2. HealthGuide Symptoms Rules
+      if (systemInstruction.includes("Symptom evaluator") || p.includes('symptom') || p.includes('fever') || p.includes('pain')) {
+        if (p.includes('fever') && p.includes('chills') && p.includes('body')) {
+          return `🩺 **HealthGuide Severity Diagnosis:**\n\n**Severity Rating: Urgent Action Recommended (Seek Clinic)**\n\n**Suspected Condition:** Dengue or Malaria seasonal risk.\n\n**First-Aid Steps:**\n- Take Paracetamol 500mg (1 tablet) for fever reduction (max 3 times/day). Do NOT take Ibuprofen/Aspirin without blood tests.\n- Maintain high fluid intake (ORS packet, coconut water, fresh juices).\n- Visit ${districtName} Civil Hospital immediately for a complete blood count (CBC) platelet test.`;
+        }
+        if (p.includes('cough') && p.includes('throat') && p.includes('fever')) {
+          return `🩺 **HealthGuide Severity Diagnosis:**\n\n**Severity Rating: Standard Care (Can wait, monitor progress)**\n\n**Suspected Condition:** Acute seasonal viral respiratory infection.\n\n**First-Aid Steps:**\n- Gargle with warm salt water three times daily.\n- Steam inhalation to clear respiratory passages.\n- Stay hydrated and rest.\n- If breathing difficulty occurs, visit your nearest Primary Health Centre (PHC).`;
+        }
+        return `🩺 **HealthGuide Symptom Checker:**\n\n**Severity Rating: Mild (Home remedy & monitor)**\n\n**First-Aid Steps:**\n- Maintain rest and light nutrition.\n- If symptoms persist or worsen past 48 hours, proceed to the nearest PHC.`;
       }
-      if (p.includes('fever') || p.includes('cough') || p.includes('symptom')) {
-        return `🩺 **Health Diagnostic Analysis:**\n\nYour symptoms suggest a common viral infection or early seasonal influenza.\n\n**Action Steps:**\n- Paracetamol 500mg for fever relief (max 3 times/day after food).\n- Warm water gargles to clear throat paths.\n- Rest and stay hydrated with clean, boiled drinking water.\n- If symptoms persist past 3 days, visit your nearest Primary Health Centre.`;
+
+      // 3. DukaanAI Business Planner Rules
+      if (p.includes('business') || p.includes('plan')) {
+        if (p.includes('tailoring') || p.includes('boutique')) {
+          return `🏪 **DukaanAI Business Plan: Stitching & Boutique**\n\n**Estimated Capital:** ₹15,000 - ₹30,000.\n**Machinery:** 2 Manual sewing machines, fabric shears, measuring equipment.\n**GST/UDYAM Guide:** Register as a sole proprietor on the government UDYAM portal (free) to enable Mudra loan applications.\n**WhatsApp Marketing:** Send localized product photos to community groups.`;
+        }
+        if (p.includes('dairy') || p.includes('milk')) {
+          return `🏪 **DukaanAI Business Plan: Micro Dairy Hub**\n\n**Estimated Capital:** ₹80,000 - ₹1,500,000 (depending on herd size).\n**Strategy:** Join local milk cooperative society to guarantee daily procurement margins. Use DukaanAI CRM to track local credits.`;
+        }
+        return `🏪 **DukaanAI Business Plan:**\n\n**Capital:** Moderate (₹10,000 - ₹50,000).\n**Operations:** Source materials directly from sub-district wholesale markets. Offer digital payments (UPI) to reduce cash holding risk. Apply for Mudra Shishu loans up to ₹50,000 at public banks.`;
       }
-      if (p.includes('business') || p.includes('plan') || p.includes('shop')) {
-        return `📊 **DukaanAI Micro-Business Blueprint:**\n\n**Initial Capital Needed:** ₹15,000 - ₹25,000.\n\n**Strategy Steps:**\n1. Procurement: Sourced goods from wholesale distributors in nearby sub-district hubs (reducing margins).\n2. Pricing: Fixed markup at 8% for basic goods, 15% for household snacks.\n3. Customer credit cycles should be limited to 15 days maximum to retain working capital.`;
+
+      // 4. SamajAI RTI Builder Rules
+      if (p.includes('rti') || p.includes('department:')) {
+        const deptName = p.match(/department:\s*([^.]+)/) ? p.match(/department:\s*([^.]+)/)[1].trim() : "Gram Panchayat Office";
+        return `📋 **FORMAL RIGHT TO INFORMATION ACT (SEC 6(1)) REQUEST TEMPLATE**\n\nTo,\nThe Public Information Officer (PIO)\nOffice of: ${deptName}\nDistrict: ${districtName}, State: ${stateName}\n\n1. Full Name of Applicant: ${userName}\n2. Address: Village Post, District ${districtName}, ${stateName}\n3. Particulars of Information sought:\n   a. Details of development funds disbursed for local pipeline works in 2025-2026.\n   b. Copy of approved contractor registry.\n4. Application Fee details: ₹10 Postal Order attached.\n\nDate: ${new Date().toLocaleDateString()}\nSignature of Applicant: _________________`;
       }
-      if (p.includes('rti') || p.includes('right to info')) {
-        return `📋 **RTI Draft Letter:**\n\nTo,\nPublic Information Officer (PIO)\nDepartment of Local Administration\n\nSubject: Request for information under Section 6(1) of RTI Act 2005.\n\nDear Sir/Madam,\nPlease provide certified photocopies of allocations, ledger balances, and approved contractor names for the water pipeline restoration works executed in this village during the 2025-2026 financial term.`;
+
+      // 5. RozgarAI Cover Letter Generator Rules
+      if (p.includes('cover') || p.includes('letter')) {
+        return `✉️ **AI-Generated Cover Letter**\n\nTo,\nThe Office Manager / Supervisor\n\nSubject: Application for Job Role.\n\nDear Sir/Madam,\nI am writing to express my interest in local roles available. I reside in District ${districtName}, ${stateName}. I possess key skills including typing, basic computer usage, and coordinate logistics. I am hardworking and eager to support administrative and supervisor projects. Looking forward to your response.\n\nSincerely,\n${userName}\nContact: +91 99999-99999`;
       }
-      return `BharatAI Assistant:\n\nThank you for asking. Based on local village demographics, we recommend utilizing official schemes like PM-Kisan or seeking collateral-free Mudra credit at public banks. Let us know if you need specific application format drafting templates!`;
+
+      return `BharatAI Helper:\n\nDear ${userName}, based on your district demographics in ${districtName}, we recommend checking matched schemes (PM-Kisan, PM-Awas) or utilizing DukaanAI bookkeeping trackers to register local cooperative transactions. Let us know if you need specific template layouts!`;
     }
 
     function formatAIPanelOutput(boxElement, rawText) {
@@ -1742,7 +1808,7 @@
       lucide.createIcons();
     }
 
-    // ================= BHARATBOT GENERAL ASSISTANT (New Feature!) =================
+    // ================= BHARATBOT GENERAL ASSISTANT =================
     let bharatBotOpen = false;
     function toggleBharatBot() {
       bharatBotOpen = !bharatBotOpen;
@@ -1787,61 +1853,6 @@
       lucide.createIcons();
     }
 
-    // ================= CHART RENDERING =================
-    let mandiChart = null;
-    function initMandiChart() {
-      const ctx = document.getElementById('mandi-price-chart').getContext('2d');
-      if (mandiChart) mandiChart.destroy();
-      mandiChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-          datasets: [
-            { label: 'Wheat (₹)', data: [2150, 2200, 2310, 2380, 2400, 2450], borderColor: '#10b981', tension: 0.3 },
-            { label: 'Mustard (₹)', data: [5100, 5250, 5180, 5300, 5350, 5400], borderColor: '#f59e0b', tension: 0.3 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { grid: { color: 'rgba(99, 102, 241, 0.1)' }, ticks: { color: '#94a3b8' } },
-            x: { grid: { color: 'rgba(99, 102, 241, 0.1)' }, ticks: { color: '#94a3b8' } }
-          },
-          plugins: { legend: { labels: { color: '#f1f5f9' } } }
-        }
-      });
-    }
-
-    let ledgerChart = null;
-    function initLedgerChart() {
-      const ctx = document.getElementById('business-ledger-chart').getContext('2d');
-      if (ledgerChart) ledgerChart.destroy();
-
-      let income = 0, expense = 0;
-      state.ledger.forEach(e => {
-        if (e.type === 'income') income += Number(e.amount);
-        else expense += Number(e.amount);
-      });
-
-      ledgerChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Income (₹)', 'Expenses (₹)'],
-          datasets: [{
-            data: [income, expense],
-            backgroundColor: ['#10b981', '#ef4444'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#f1f5f9' } } }
-        }
-      });
-    }
-
     // ================= KISANAI SCRIPTS =================
     async function diagnoseCrop() {
       const name = document.getElementById('crop-name-input').value;
@@ -1883,25 +1894,6 @@
       box.classList.remove('hidden');
       box.innerHTML = `✅ <strong>PM Fasal Bima Yojana Eligible!</strong><br/>
         Your area has activated subsidised premium parameters. Apply at your CSC (Common Service Centre) with Land Record copies.`;
-    }
-
-    function analyzeSoil() {
-      const n = document.getElementById('soil-n').value;
-      const p = document.getElementById('soil-p').value;
-      const k = document.getElementById('soil-k').value;
-      const resBox = document.getElementById('soil-result');
-
-      if (!n || !p || !k) {
-        alert("Please input all soil component levels.");
-        return;
-      }
-
-      resBox.classList.remove('hidden');
-      if (Number(n) < 140) {
-        resBox.innerHTML = `⚠️ <strong>Low Nitrogen detected!</strong><br/>Add 50kg Urea per acre during irrigation cycle. Introduce legume crop rotation to fix natural nitrogen.`;
-      } else {
-        resBox.innerHTML = `✅ <strong>Optimal NPK levels!</strong><br/>No additional heavy chemical fertilizers required. Maintain organic manure compost recycling.`;
-      }
     }
 
     // ================= SKILLBRIDGE SCRIPTS =================
@@ -1969,55 +1961,6 @@
       saveState();
       updateGreetingPanel();
       queueAction('progress_logs', { user_id: state.user.name, streak: state.streakCount, timestamp: new Date() });
-    }
-
-    // Interactive Student Quiz
-    let currentQuestionIdx = 0;
-    const quizQuestions = [
-      { q: "What does 'WWW' stand for in computer systems?", o: ["World Wide Web", "World War Web", "Word Wide Web"], a: 0 },
-      { q: "Which soil nutrient is mostly replenished by planting legumes?", o: ["Potassium", "Phosphorus", "Nitrogen"], a: 2 },
-      { q: "What is the toll-free national helpline for women in distress?", o: ["181", "100", "108"], a: 0 }
-    ];
-
-    function renderQuizQuestion() {
-      const container = document.getElementById('quiz-container');
-      if (currentQuestionIdx >= quizQuestions.length) {
-        container.innerHTML = `
-          <div class="text-center space-y-2 py-3">
-            <p class="text-emerald-400 font-bold text-sm">🎉 Quiz Completed!</p>
-            <p class="text-slate-300">You scored 3/3 points. Keep learning daily!</p>
-            <button onclick="resetQuiz()" class="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold text-[10px] transition">Retry Quiz</button>
-          </div>
-        `;
-        return;
-      }
-      const q = quizQuestions[currentQuestionIdx];
-      container.innerHTML = `
-        <p class="font-semibold text-white">Question ${currentQuestionIdx + 1}: ${q.q}</p>
-        <div class="space-y-1.5 pt-1">
-          ${q.o.map((opt, idx) => `
-            <button onclick="submitAnswer(${idx})" class="w-full text-left bg-indigo-950/40 border border-indigo-900/60 p-2 rounded hover:bg-indigo-950 transition text-[11px] text-slate-300">
-              ${opt}
-            </button>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function submitAnswer(idx) {
-      const q = quizQuestions[currentQuestionIdx];
-      if (idx === q.a) {
-        alert("Correct answer! +1 point.");
-      } else {
-        alert(`Incorrect! The correct answer was: ${q.o[q.a]}`);
-      }
-      currentQuestionIdx++;
-      renderQuizQuestion();
-    }
-
-    function resetQuiz() {
-      currentQuestionIdx = 0;
-      renderQuizQuestion();
     }
 
     // ================= HEALTHGUIDE SCRIPTS =================
@@ -2128,184 +2071,82 @@
       }
     }
 
-    // Maternal Health Weekly Guide Slider Logic
-    const pregnancyData = {
-      1: { tips: "Start taking Folic Acid daily. Avoid raw fish and excessive caffeine.", check: "Verify your blood tests and hemoglobin levels at nearest PHC." },
-      12: { tips: "Your baby is now the size of a plum. Morning sickness might start fading now.", check: "Book your first ultrasound check-up (NT scan)." },
-      24: { tips: "Feel the kicks! Keep walking daily for 30 minutes. Eat iron-rich foods (spinach, beetroot).", check: "Check blood sugar levels for gestational diabetes." },
-      36: { tips: "The baby is fully developed. Pack your hospital bag and review transport routes to PHC.", check: "Weekly blood pressure checks to monitor preeclampsia risk." }
-    };
-
-    function updatePregnancyWeek(val) {
-      document.getElementById('preg-week-display').innerText = val;
-      const content = document.getElementById('preg-week-content');
-      
-      let weekData = pregnancyData[val];
-      if (!weekData) {
-        if (val < 12) weekData = pregnancyData[1];
-        else if (val < 24) weekData = pregnancyData[12];
-        else if (val < 36) weekData = pregnancyData[24];
-        else weekData = pregnancyData[36];
-      }
-      
-      content.innerHTML = `
-        <p>💡 <strong>Nutrition & Tips:</strong> ${weekData.tips}</p>
-        <p class="mt-1.5">🩺 <strong>Health Checklist:</strong> ${weekData.check}</p>
-      `;
-    }
-
     // ================= ROZGARAI (JOBS) =================
-    const jobsDatabase = [
-      { id: 1, title: "Data Entry Operator", org: "Local Agri Cooperative Office", sector: "office", sal: "₹12,000/month", loc: "Bhiwani Hub" },
-      { id: 2, title: "MGNREGA Canal Work Supervisor", org: "Panchayat Development Board", sector: "govt", sal: "₹380/day", loc: "Village outskirts" },
-      { id: 3, title: "Farming Equipment Fleet Dispatcher", org: "Custom Hiring Center", sector: "field", sal: "₹15,000/month", loc: "Rural Cluster" }
-    ];
-
-    function renderJobs() {
-      const filter = document.getElementById('job-role-filter').value;
-      const container = document.getElementById('jobs-list-container');
-      container.innerHTML = '';
-
-      const filtered = jobsDatabase.filter(j => filter === 'all' || j.sector === filter);
-      filtered.forEach(j => {
-        container.innerHTML += `
-          <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 flex justify-between items-center text-xs">
-            <div>
-              <h4 class="font-bold text-white text-sm">${j.title}</h4>
-              <p class="text-[10px] text-muted">${j.org} • ${j.loc}</p>
-              <p class="text-emerald-400 font-bold mt-1">${j.sal}</p>
-            </div>
-            <button onclick="applyJob('${j.title}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-[10px] font-semibold text-white">Apply</button>
-          </div>
-        `;
-      });
+    function toggleRozgarTabs(tabName) {
+      document.getElementById('rozgar-board-tab').classList.toggle('hidden', tabName !== 'board');
+      document.getElementById('rozgar-applications-tab').classList.toggle('hidden', tabName !== 'applications');
+      
+      document.getElementById('tab-btn-board').className = tabName === 'board' ? 'text-indigo-400 border-b-2 border-indigo-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('tab-btn-applications').className = tabName === 'applications' ? 'text-indigo-400 border-b-2 border-indigo-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      
+      if (tabName === 'applications') {
+        renderAppliedJobsList();
+      }
     }
 
     function applyJob(title) {
-      alert(`Successfully registered interest for ${title}! The rural coordination officer will follow up.`);
-      state.jobsApplied = state.jobsApplied || [];
-      state.jobsApplied.push(title);
-      saveState();
-      queueAction('job_applications', { user_id: state.user.name, job_title: title, status: 'Applied' });
-    }
-
-    let interviewStep = 0;
-    function sendInterviewMessage() {
-      const input = document.getElementById('interview-input');
-      const box = document.getElementById('interview-chat-box');
-      const text = input.value.trim();
-      if (!text) return;
-
-      box.innerHTML += `<div class="bg-indigo-600 p-2 rounded max-w-[80%] self-end ml-auto text-right text-white">${text}</div>`;
-      input.value = '';
-
-      setTimeout(() => {
-        interviewStep++;
-        let reply = "";
-        if (interviewStep === 1) {
-          reply = "Great. Tell me about your experience working with local spreadsheets or manual logbooks.";
-        } else {
-          reply = "Understood. That concludes our mock module. You handled communications extremely well!";
-        }
-        
-        box.innerHTML += `
-          <div class="bg-indigo-950/40 p-2 rounded max-w-[80%] space-y-1">
-            <p>${reply}</p>
-            <button onclick="speakText(this.previousElementSibling.innerText)" class="text-[9px] text-secondary flex items-center gap-0.5 underline">
-              <i data-lucide="volume-2" class="w-2.5 h-2.5"></i> Speak
-            </button>
-          </div>`;
-        box.scrollTop = box.scrollHeight;
-        lucide.createIcons();
-      }, 1000);
-    }
-
-    function generateResume() {
-      const name = document.getElementById('resume-name').value;
-      const phone = document.getElementById('resume-phone').value;
-      const skills = document.getElementById('resume-skills').value;
-      const exp = document.getElementById('resume-exp').value;
-      const preview = document.getElementById('resume-preview-box');
-
-      if (!name || !phone) {
-        alert("Name and contact must be defined.");
+      if (state.jobsApplied.includes(title)) {
+        alert("You have already applied to this job position!");
         return;
       }
-
-      preview.classList.remove('hidden');
-      preview.innerHTML = `
-        <div class="text-center font-bold border-b pb-2 mb-2 text-sm text-black">${name.toUpperCase()}</div>
-        <p class="text-black"><strong>Contact:</strong> ${phone}</p>
-        <p class="text-black"><strong>Location:</strong> ${state.user ? state.user.district : 'Bhiwani'}, ${state.user ? state.user.state : 'Haryana'}</p>
-        <p class="text-black"><strong>Capabilities:</strong> ${skills}</p>
-        <p class="text-black"><strong>Background Experience:</strong> ${exp}</p>
-        <div class="pt-2 flex justify-between">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('resume-preview-box').innerText); alert('Copied to clipboard!');" class="text-[10px] text-blue-600 underline">Copy Text</button>
-          <button onclick="window.print()" class="text-[10px] text-blue-600 underline">Print Profile</button>
-        </div>
-      `;
+      state.jobsApplied.push(title);
+      saveState();
+      updateGreetingPanel();
+      queueAction('job_applications', { user_id: state.user.name, job_title: title, status: 'Applied' });
+      alert(`Applied to: ${title}! Track status under 'My Applications' tab.`);
     }
 
-    function initExamList() {
-      const exams = [
-        { name: "SSC Railway Assistant", date: "Sep 12, 2026" },
-        { name: "State PSC Clerk Tier-1", date: "Nov 05, 2026" }
-      ];
-      const box = document.getElementById('exam-tracker-list');
-      box.innerHTML = '';
-      exams.forEach(e => {
-        const diff = new Date(e.date) - new Date();
-        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-        box.innerHTML += `
-          <div class="flex justify-between items-center bg-indigo-950/20 p-2 rounded border border-indigo-950">
+    function renderAppliedJobsList() {
+      const container = document.getElementById('applied-jobs-list');
+      if (state.jobsApplied.length === 0) {
+        container.innerHTML = `<p class="text-muted text-center py-10">No active applications. Apply to local jobs above to track updates.</p>`;
+        return;
+      }
+      container.innerHTML = '';
+      state.jobsApplied.forEach(j => {
+        container.innerHTML += `
+          <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 flex justify-between items-center">
             <div>
-              <p class="font-bold text-white">${e.name}</p>
-              <p class="text-[10px] text-muted">Deadline: ${e.date}</p>
+              <h4 class="font-bold text-white text-sm">${j}</h4>
+              <p class="text-[10px] text-muted">Submitted: Just now</p>
             </div>
-            <span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 font-bold">${days} Days left</span>
+            <span class="px-2.5 py-1 rounded bg-yellow-500/10 text-yellow-400 font-bold border border-yellow-500/20">Under Review</span>
           </div>
         `;
       });
     }
 
     // ================= DUKAANAI (SMALL BUSINESS) =================
-    function renderLedgerTable() {
-      const body = document.getElementById('ledger-entries-body');
-      const totalEl = document.getElementById('ledger-total');
-      body.innerHTML = '';
-
-      let total = 0;
-      state.ledger.forEach((e, idx) => {
-        const amt = Number(e.amount);
-        if (e.type === 'income') total += amt;
-        else total -= amt;
-
-        body.innerHTML += `
-          <tr class="border-b border-indigo-950 hover:bg-indigo-950/20">
-            <td class="p-2 text-white font-medium">${e.desc}</td>
-            <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${e.type === 'income' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${e.type.toUpperCase()}</span></td>
-            <td class="p-2 text-right font-bold ${e.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">₹${amt}</td>
-          </tr>
-        `;
-      });
-      totalEl.innerText = `₹${total}`;
+    let currentLogoBgColor = '#1a1a3e';
+    function changeLogoColor(colorCode) {
+      currentLogoBgColor = colorCode;
+      generateLogo();
     }
 
-    function addLedgerEntry() {
-      const desc = document.getElementById('ledger-desc').value;
-      const amt = document.getElementById('ledger-amount').value;
-      const type = document.getElementById('ledger-type').value;
+    function generateLogo() {
+      const canvas = document.getElementById('logo-canvas');
+      const ctx = canvas.getContext('2d');
+      const text = document.getElementById('logo-text-input').value || (state.user ? state.user.name : 'Dukaan');
+      
+      ctx.fillStyle = currentLogoBgColor;
+      ctx.fillRect(0, 0, 200, 80);
+      
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(5, 5, 190, 70);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px "Plus Jakarta Sans"';
+      ctx.textAlign = 'center';
+      ctx.fillText(text.toUpperCase(), 100, 45);
+    }
 
-      if (!desc || !amt) return;
-      const item = { id: Date.now(), desc, amount: Number(amt), type };
-      state.ledger.push(item);
-      saveState();
-      renderLedgerTable();
-      initLedgerChart();
-      queueAction('business_records', { user_id: state.user.name, ...item });
-
-      document.getElementById('ledger-desc').value = '';
-      document.getElementById('ledger-amount').value = '';
+    function downloadLogo() {
+      const canvas = document.getElementById('logo-canvas');
+      const link = document.createElement('a');
+      link.download = 'shop_logo.png';
+      link.href = canvas.toDataURL();
+      link.click();
     }
 
     function generateInvoice() {
@@ -2319,250 +2160,24 @@
         return;
       }
       
-      const total = qty * rate;
+      const subtotal = qty * rate;
+      const tax = subtotal * 0.18; // 18% CGST/SGST simulation
+      const total = subtotal + tax;
+
       preview.classList.remove('hidden');
       preview.innerHTML = `
-        <div class="text-center font-bold text-black border-b pb-1.5 mb-1.5">TAX INVOICE</div>
-        <p class="text-black"><strong>Shop Name:</strong> ${state.user ? state.user.name : 'DukaanAI Partner'}</p>
-        <p class="text-black"><strong>Item:</strong> ${item} x ${qty} pcs</p>
-        <p class="text-black"><strong>Rate:</strong> ₹${rate}</p>
-        <p class="text-black border-t pt-1.5 font-bold">TOTAL AMOUNT: ₹${total}</p>
+        <div class="text-center font-bold text-black border-b pb-1.5 mb-1.5">TAX INVOICE (GST Compliant)</div>
+        <p class="text-black"><strong>Vendor:</strong> ${state.user ? state.user.name : 'DukaanAI Partner'}</p>
+        <p class="text-black"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        <p class="text-black border-t border-b py-1"><strong>Item:</strong> ${item} (${qty} x ₹${rate})</p>
+        <p class="text-black">Subtotal: ₹${subtotal.toFixed(2)}</p>
+        <p class="text-black">GST (18%): ₹${tax.toFixed(2)}</p>
+        <p class="text-black border-t pt-1.5 font-extrabold text-sm">TOTAL BILL: ₹${total.toFixed(2)}</p>
         <div class="pt-2 flex justify-between">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('invoice-preview').innerText); alert('Invoice text copied!');" class="text-[10px] text-blue-600 underline">Copy Invoice</button>
-          <button onclick="window.print()" class="text-[10px] text-blue-600 underline">Print</button>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('invoice-preview').innerText); alert('Invoice text copied!');" class="text-[10px] text-blue-600 underline font-bold">Copy Text</button>
+          <button onclick="window.print()" class="text-[10px] text-blue-600 underline font-bold">Print Invoice</button>
         </div>
       `;
-    }
-
-    function generateLogo() {
-      const canvas = document.getElementById('logo-canvas');
-      const ctx = canvas.getContext('2d');
-      const text = document.getElementById('logo-text-input').value || (state.user ? state.user.name : 'Dukaan');
-      
-      ctx.fillStyle = '#1a1a3e';
-      ctx.fillRect(0, 0, 200, 80);
-      
-      // Draw border
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(5, 5, 190, 70);
-      
-      // Text
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 16px "Plus Jakarta Sans"';
-      ctx.textAlign = 'center';
-      ctx.fillText(text.toUpperCase(), 100, 45);
-    }
-
-    async function generateBusinessPlan() {
-      const type = document.getElementById('biz-plan-type').value;
-      const box = document.getElementById('biz-plan-result');
-      box.classList.remove('hidden');
-      box.innerText = "Drafting custom localized business roadmap...";
-      
-      const rep = await queryAI(`Create micro business plan for: ${type}`);
-      formatAIPanelOutput(box, rep);
-
-      const log = { business: type, plan: rep, timestamp: new Date() };
-      state.savedPlans.push(log);
-      saveState();
-      queueAction('saved_plans', { user_id: state.user.name, plan_type: 'business', data: log });
-    }
-
-    function renderCrmList() {
-      const box = document.getElementById('crm-list-box');
-      box.innerHTML = '';
-      state.crm.forEach(c => {
-        box.innerHTML += `
-          <div class="bg-indigo-950/30 p-2 rounded border border-indigo-950 flex justify-between items-center">
-            <span class="text-white">${c.name}</span>
-            <span class="font-bold text-amber-500">Owes: ₹${c.credit}</span>
-          </div>
-        `;
-      });
-    }
-
-    function addCrmRecord() {
-      const name = document.getElementById('crm-name').value;
-      const credit = document.getElementById('crm-credit').value;
-      if (!name || !credit) return;
-
-      state.crm.push({ name, credit: Number(credit) });
-      saveState();
-      renderCrmList();
-      document.getElementById('crm-name').value = '';
-      document.getElementById('crm-credit').value = '';
-    }
-
-    // ================= SHAKTIAI SCRIPTS =================
-    function renderShgTable() {
-      const body = document.getElementById('shg-members-body');
-      body.innerHTML = '';
-      state.shg.forEach((m, idx) => {
-        body.innerHTML += `
-          <tr class="border-b border-indigo-950 hover:bg-indigo-950/20">
-            <td class="p-2 text-white font-medium">${m.name}</td>
-            <td class="p-2 font-bold text-purple-400">₹${m.amount}</td>
-            <td class="p-2 text-right"><button onclick="deleteShg(${idx})" class="text-[10px] text-rose-400">Remove</button></td>
-          </tr>
-        `;
-      });
-    }
-
-    function addShgRecord() {
-      const name = document.getElementById('shg-member-name').value;
-      const amt = document.getElementById('shg-savings').value;
-      if (!name || !amt) return;
-
-      state.shg.push({ name, amount: Number(amt) });
-      saveState();
-      renderShgTable();
-      document.getElementById('shg-member-name').value = '';
-      document.getElementById('shg-savings').value = '';
-    }
-
-    function deleteShg(idx) {
-      state.shg.splice(idx, 1);
-      saveState();
-      renderShgTable();
-    }
-
-    function calcNextPeriod() {
-      const dateVal = document.getElementById('period-date').value;
-      const box = document.getElementById('period-result-box');
-      if (!dateVal) return;
-      
-      const date = new Date(dateVal);
-      date.setDate(date.getDate() + 28); // average cycle
-      
-      box.classList.remove('hidden');
-      box.innerHTML = `🔮 <strong>Expected Next cycle:</strong> ${date.toDateString()}<br/>
-        <span class="text-[10px] text-muted">Cycle fluctuations are normal. Consult a doctor at your PHC in case of heavy delays.</span>`;
-    }
-
-    function triggerSOS() {
-      const status = document.getElementById('sos-status');
-      status.classList.remove('hidden');
-      status.innerText = "SOS Broadcast Activated. Fetching coordinates...";
-      
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          status.innerText = `Emergency Alert dispatched to nearest Station! GPS Coords: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-          triggerEmailAlert(pos.coords.latitude, pos.coords.longitude);
-        },
-        () => {
-          status.innerText = "Emergency Alert Sent. Location fallback: Delhi Central Police Station.";
-          triggerEmailAlert(28.6139, 77.2090);
-        }
-      );
-    }
-
-    async function triggerEmailAlert(lat, lon) {
-      const { resend } = state.credentials;
-      if (resend) {
-        try {
-          await fetch("https://api.resend.com/emails", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${resend}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              from: "safety@bharatai.org",
-              to: "family-contacts@example.com",
-              subject: "EMERGENCY SOS ALERT — BharatAI Super App",
-              html: `<p>A family member has triggered an emergency SOS from coords: <strong>${lat}, ${lon}</strong>.</p>`
-            })
-          });
-        } catch (e) {
-          console.error("Resend delivery failed", e);
-        }
-      }
-    }
-
-    function findPolice() {
-      alert("Opening coordinates of the nearest sub-district policing hub...");
-    }
-
-    // ================= SAMAJAI SCRIPTS =================
-    function renderNotices() {
-      const container = document.getElementById('notice-board-posts');
-      container.innerHTML = '';
-      state.notices.forEach(n => {
-        container.innerHTML += `
-          <div class="bg-indigo-950/30 p-3.5 rounded-xl border border-indigo-900/30">
-            <div class="flex items-center justify-between text-[10px] mb-1.5">
-              <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-bold">${n.tag || 'News'}</span>
-              <span class="text-muted">${n.time || 'Just now'}</span>
-            </div>
-            <p class="text-xs text-slate-200">${n.text}</p>
-            <p class="text-[10px] text-muted mt-2 font-semibold">— Posted by ${n.user || 'Anonymous'}</p>
-          </div>
-        `;
-      });
-    }
-
-    function postNotice() {
-      const val = document.getElementById('notice-content').value;
-      if (!val) return;
-
-      const notice = {
-        id: Date.now(),
-        text: val,
-        user: state.user ? state.user.name : 'Anonymous',
-        tag: "General Notice",
-        time: "Just now"
-      };
-      state.notices.unshift(notice);
-      saveState();
-      renderNotices();
-      queueAction('community_posts', notice);
-      document.getElementById('notice-content').value = '';
-    }
-
-    function calcSchemeEligibility() {
-      const inc = document.getElementById('calc-income').value;
-      const job = document.getElementById('calc-job').value;
-      const box = document.getElementById('calc-schemes-result');
-
-      if (!inc) return;
-      box.classList.remove('hidden');
-
-      let scheme = "";
-      if (Number(inc) <= 200000 && job === 'farmer') {
-        scheme = "PM-KISAN Samman Nidhi";
-        box.innerHTML = `
-          <h4 class="font-bold text-white mb-1">Matched: PM-KISAN Samman Nidhi</h4>
-          <p class="text-[10px] text-muted">Direct income support of ₹6,000/year. Direct transfer active.</p>
-          <a href="https://pmkisan.gov.in" target="_blank" class="block text-indigo-400 mt-2 hover:underline text-[10px]">Official PM Kisan Portal</a>
-        `;
-      } else if (Number(inc) <= 150000) {
-        scheme = "PM Garib Kalyan Yojana";
-        box.innerHTML = `
-          <h4 class="font-bold text-white mb-1">Matched: PM Garib Kalyan Yojana</h4>
-          <p class="text-[10px] text-muted">Eligible for free monthly rations. Verify at local ration office.</p>
-        `;
-      } else {
-        scheme = "Mudra Micro Enterprise Credit";
-        box.innerHTML = `
-          <h4 class="font-bold text-white mb-1">Mudra Micro Enterprise Credit</h4>
-          <p class="text-[10px] text-muted">Eligible for Mudra loans to scale local setups. Approach nearest bank.</p>
-        `;
-      }
-      queueAction('scheme_matches', { user_id: state.user.name, scheme_name: scheme, eligible: true });
-    }
-
-    async function generateRTI() {
-      const dept = document.getElementById('rti-dept').value;
-      const issue = document.getElementById('rti-issue').value;
-      const box = document.getElementById('rti-result-box');
-
-      if (!dept || !issue) return;
-      box.classList.remove('hidden');
-      box.innerText = "Drafting legal format for Public Records inspection...";
-
-      const rep = await queryAI(`Generate RTI request for Department: ${dept}. Purpose: ${issue}`);
-      formatAIPanelOutput(box, rep);
     }
 
     // ================= INITIAL LOADING =================
@@ -2576,14 +2191,12 @@
         if (document.getElementById('vac-mr')) document.getElementById('vac-mr').checked = !!state.vaccinations.mr;
       }
       
-      // Update UI elements based on state
       document.getElementById('language-select').value = state.lang;
       document.getElementById('lang-btn-text').innerText = state.lang === 'en' ? 'हिंदी' : 'English';
       
       applyTranslations();
       navigateTo(state.currentModule);
 
-      // Listen for network changes
       window.addEventListener('online', () => {
         updateNetworkStatus(true);
         syncOfflineQueue(); 
@@ -2591,7 +2204,6 @@
       window.addEventListener('offline', () => updateNetworkStatus(false));
       updateNetworkStatus(navigator.onLine);
 
-      // Lucide icons
       lucide.createIcons();
     });
 
