@@ -16,6 +16,18 @@ if (-not $tokenLine) {
 $token = $tokenLine.ToString().Split('=')[1].Trim()
 $baseDir = "C:\Users\HP\.gemini\antigravity\scratch\bharatai"
 
+# Parse Supabase credentials
+$supabaseUrl = ""
+$supabaseAnon = ""
+foreach ($line in $envFile) {
+    if ($line -match "^SUPABASE_URL=(.*)") {
+        $supabaseUrl = $Matches[1].Trim()
+    }
+    if ($line -match "^SUPABASE_ANON_KEY=(.*)") {
+        $supabaseAnon = $Matches[1].Trim()
+    }
+}
+
 # Files to deploy
 $fileList = @("index.html", "server.js", "package.json", "vercel.json", "manifest.json", "sw.js")
 $jsonFiles = @()
@@ -33,8 +45,9 @@ foreach ($fileName in $fileList) {
 }
 
 $filesJoined = $jsonFiles -join ","
-Write-Host "Assembling full-stack payload..." -ForegroundColor Cyan
-$body = "{`"name`":`"bharat-ai`",`"files`":[$filesJoined],`"projectSettings`":{`"framework`":null}}"
+Write-Host "Assembling full-stack payload with Supabase config..." -ForegroundColor Cyan
+
+$body = "{`"name`":`"bharat-ai`",`"files`":[$filesJoined],`"projectSettings`":{`"framework`":null},`"env`":{`"SUPABASE_URL`":`"$supabaseUrl`",`"SUPABASE_ANON_KEY`":`"$supabaseAnon`"}}"
 
 $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($body)
 
