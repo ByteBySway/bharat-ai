@@ -221,15 +221,30 @@
           <div class="grid grid-cols-3 gap-2">
             <div>
               <label class="block text-slate-300 mb-1">State</label>
-              <input id="profile-state" type="text" placeholder="Haryana" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+              <select id="profile-state" onchange="updateDistrictOptions()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                <option value="">Select State</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Other">Other (Custom)</option>
+              </select>
+              <input id="profile-state-custom" type="text" placeholder="Type State" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white mt-1 hidden">
             </div>
             <div>
               <label class="block text-slate-300 mb-1">District</label>
-              <input id="profile-district" type="text" placeholder="Bhiwani" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+              <select id="profile-district" onchange="updateVillageOptions()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                <option value="">Select District</option>
+              </select>
+              <input id="profile-district-custom" type="text" placeholder="Type District" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white mt-1 hidden">
             </div>
             <div>
               <label class="block text-slate-300 mb-1">Village</label>
-              <input id="profile-village" type="text" placeholder="Tigrana" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+              <select id="profile-village" onchange="onVillageSelected()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                <option value="">Select Village</option>
+              </select>
+              <input id="profile-village-custom" type="text" placeholder="Type Village" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white mt-1 hidden">
             </div>
           </div>
         </div>
@@ -2304,6 +2319,125 @@
   </footer>
 
   <script>
+    // ================= DYNAMIC LOCATION DICTIONARY =================
+    const regionalData = {
+      "Haryana": {
+        "Bhiwani": ["Tigrana", "Chang", "Guwani", "Kitlana"],
+        "Hisar": ["Adampur", "Barwala", "Narnaund", "Hansi"],
+        "Rohtak": ["Sampla", "Kalanaur", "Meham", "Lakhan Majra"]
+      },
+      "Punjab": {
+        "Amritsar": ["Chogawan", "Ajnala", "Attari", "Majitha"],
+        "Ludhiana": ["Mullanpur", "Sahnewal", "Doraha", "Samrala"],
+        "Patiala": ["Nabha", "Rajpura", "Samana", "Patran"]
+      },
+      "Uttar Pradesh": {
+        "Lucknow": ["Malihabad", "Bakshi Ka Talab", "Kakori", "Mohanlalganj"],
+        "Varanasi": ["Pindra", "Cholapur", "Harahua", "Kashi Vidyapeeth"],
+        "Mathura": ["Vrindavan", "Goverdhan", "Chhata", "Baldeo"]
+      },
+      "Rajasthan": {
+        "Jaipur": ["Amer", "Sanganer", "Chomu", "Bass"],
+        "Jodhpur": ["Luni", "Bilara", "Osian", "Shergarh"],
+        "Udaipur": ["Girwa", "Gogunda", "Mavli", "Salumber"]
+      },
+      "Maharashtra": {
+        "Pune": ["Haveli", "Mulshi", "Maval", "Shirur"],
+        "Nagpur": ["Kamptee", "Hingna", "Katol", "Saoner"],
+        "Nashik": ["Niphad", "Sinnar", "Yeola", "Igatpuri"]
+      }
+    };
+
+    function updateDistrictOptions() {
+      const stateSel = document.getElementById('profile-state');
+      const distSel = document.getElementById('profile-district');
+      const distCustom = document.getElementById('profile-district-custom');
+      const stateCustom = document.getElementById('profile-state-custom');
+      const villSel = document.getElementById('profile-village');
+      const villCustom = document.getElementById('profile-village-custom');
+
+      const selectedState = stateSel.value;
+      
+      distSel.innerHTML = '<option value="">Select District</option>';
+      villSel.innerHTML = '<option value="">Select Village</option>';
+      
+      distCustom.classList.add('hidden');
+      villCustom.classList.add('hidden');
+
+      if (selectedState === 'Other') {
+        stateCustom.classList.remove('hidden');
+        distSel.classList.add('hidden');
+        distCustom.classList.remove('hidden');
+        villSel.classList.add('hidden');
+        villCustom.classList.remove('hidden');
+      } else {
+        stateCustom.classList.add('hidden');
+        distSel.classList.remove('hidden');
+        villSel.classList.remove('hidden');
+
+        if (selectedState && regionalData[selectedState]) {
+          const districts = Object.keys(regionalData[selectedState]);
+          districts.forEach(dist => {
+            const opt = document.createElement('option');
+            opt.value = dist;
+            opt.innerText = dist;
+            distSel.appendChild(opt);
+          });
+          const otherOpt = document.createElement('option');
+          otherOpt.value = 'Other';
+          otherOpt.innerText = 'Other (Custom)';
+          distSel.appendChild(otherOpt);
+        }
+      }
+    }
+
+    function updateVillageOptions() {
+      const stateSel = document.getElementById('profile-state');
+      const distSel = document.getElementById('profile-district');
+      const distCustom = document.getElementById('profile-district-custom');
+      const villSel = document.getElementById('profile-village');
+      const villCustom = document.getElementById('profile-village-custom');
+
+      const selectedState = stateSel.value;
+      const selectedDist = distSel.value;
+
+      villSel.innerHTML = '<option value="">Select Village</option>';
+      villCustom.classList.add('hidden');
+
+      if (selectedDist === 'Other') {
+        distCustom.classList.remove('hidden');
+        villSel.classList.add('hidden');
+        villCustom.classList.remove('hidden');
+      } else {
+        distCustom.classList.add('hidden');
+        villSel.classList.remove('hidden');
+
+        if (selectedState && selectedDist && regionalData[selectedState] && regionalData[selectedState][selectedDist]) {
+          const villages = regionalData[selectedState][selectedDist];
+          villages.forEach(vill => {
+            const opt = document.createElement('option');
+            opt.value = vill;
+            opt.innerText = vill;
+            villSel.appendChild(opt);
+          });
+          const otherOpt = document.createElement('option');
+          otherOpt.value = 'Other';
+          otherOpt.innerText = 'Other (Custom)';
+          villSel.appendChild(otherOpt);
+        }
+      }
+    }
+
+    function onVillageSelected() {
+      const villSel = document.getElementById('profile-village');
+      const villCustom = document.getElementById('profile-village-custom');
+      if (villSel.value === 'Other') {
+        villCustom.classList.remove('hidden');
+      } else {
+        villCustom.classList.add('hidden');
+      }
+    }
+
     // ================= STATIC LANGUAGES DICTIONARY =================
     const translations = {
       en: {
@@ -2577,14 +2711,27 @@
     function saveUserProfile() {
       const name = document.getElementById('profile-name').value;
       const role = document.getElementById('profile-role').value;
-      const stateVal = document.getElementById('profile-state').value;
-      const dist = document.getElementById('profile-district').value;
-      const vill = document.getElementById('profile-village').value;
+      
+      let stateVal = document.getElementById('profile-state').value;
+      if (stateVal === 'Other') {
+        stateVal = document.getElementById('profile-state-custom').value.trim();
+      }
+
+      let dist = document.getElementById('profile-district').value;
+      if (dist === 'Other' || stateVal === 'Other' || !dist) {
+        dist = document.getElementById('profile-district-custom').value.trim();
+      }
+
+      let vill = document.getElementById('profile-village').value;
+      if (vill === 'Other' || dist === 'Other' || stateVal === 'Other' || !vill) {
+        vill = document.getElementById('profile-village-custom').value.trim();
+      }
+
       const age = document.getElementById('profile-age').value;
       const gen = document.getElementById('profile-gender').value;
 
       if (!name || !stateVal || !dist || !vill) {
-        alert("Please enter all details to register.");
+        alert("Please select or enter all details to register.");
         return;
       }
 
