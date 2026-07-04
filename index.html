@@ -73,6 +73,11 @@
 </head>
 <body class="min-h-screen flex flex-col pb-20 md:pb-0">
 
+  <!-- OFFLINE QUEUE STATUS BANNER -->
+  <div id="offline-queue-banner" class="bg-gradient-to-r from-amber-600 to-indigo-600 text-white text-xs font-bold text-center py-2 px-4 hidden transition-all shadow-md">
+    🔄 0 changes pending sync.
+  </div>
+
   <!-- TOP HEADER -->
   <header class="sticky top-0 z-40 w-full glass border-b border-indigo-950 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-2" onclick="navigateTo('home')">
@@ -369,7 +374,7 @@
                 <i data-lucide="shield-alert" class="w-4 h-4"></i> Run AI Diagnosis
               </button>
             </div>
-            <div id="crop-diag-result" class="hidden bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs space-y-2 max-h-48 overflow-y-auto custom-scroll">
+            <div id="crop-diag-result" class="hidden bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs space-y-2">
             </div>
           </div>
 
@@ -444,8 +449,19 @@
           </div>
         </div>
 
-        <!-- Career Explorer & Progress Logs -->
+        <!-- Career Explorer, Streaks & Interactive Quiz -->
         <div class="space-y-6">
+          <!-- Quiz Assessment (New Feature!) -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+              <i data-lucide="award" class="w-4 h-4 text-yellow-400"></i> Skill Assessment Quiz
+            </h3>
+            <p class="text-xs text-muted">Test your digital literacy and local knowledge to earn points.</p>
+            <div id="quiz-container" class="space-y-3 text-xs">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
               <i data-lucide="compass" class="w-4 h-4 text-blue-400"></i> Career Explorer & Roadmap
@@ -457,7 +473,7 @@
                 <option value="dairy">Dairy Farm Manager / Cooperatives</option>
                 <option value="govt">Government Office Assistant (SSC CHSL)</option>
               </select>
-              <button onclick="exploreCareer()" class="w-full py-2 bg-indigo-950 border border-indigo-805 hover:bg-indigo-900 text-xs font-semibold rounded-lg text-slate-200 transition">
+              <button onclick="exploreCareer()" class="w-full py-2 bg-indigo-950 border border-indigo-850 hover:bg-indigo-900 text-xs font-semibold rounded-lg text-slate-200 transition">
                 Create Career Roadmap
               </button>
             </div>
@@ -513,6 +529,23 @@
               <button onclick="checkSymptoms()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-lg text-white font-semibold text-xs transition">Analyze</button>
             </div>
             <div id="health-symptom-result" class="hidden bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs"></div>
+          </div>
+
+          <!-- Maternal Health Slider (New Feature!) -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+              <i data-lucide="baby" class="w-4 h-4 text-rose-400"></i> Maternal Health Guide (Week-by-Week)
+            </h3>
+            <p class="text-xs text-muted">Select your pregnancy week to view nutrition, precautions, and checklists.</p>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-xs text-slate-300 font-semibold">Pregnancy Week: <span id="preg-week-display" class="font-bold text-rose-400">12</span></label>
+              </div>
+              <input type="range" id="preg-week-slider" min="1" max="40" value="12" class="w-full accent-rose-500 cursor-pointer" oninput="updatePregnancyWeek(this.value)">
+              <div id="preg-week-content" class="bg-indigo-950/20 border border-indigo-950/50 p-3 rounded text-xs space-y-1.5 text-slate-200">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
           </div>
 
           <div class="glass rounded-xl p-5 space-y-4">
@@ -1094,7 +1127,8 @@
       shg: [],
       notices: [],
       streakCount: 0,
-      vaccinations: {}
+      vaccinations: {},
+      offlineQueue: [] // Actions queued during offline state
     };
 
     // Initialize LocalStorage Database
@@ -1132,6 +1166,9 @@
           { id: 2, name: "Renu Sharma", amount: 500 }
         ];
       }
+
+      if (!state.offlineQueue) state.offlineQueue = [];
+      updateOfflineQueueBanner();
     }
 
     function saveState() {
@@ -1174,6 +1211,10 @@
       } else if (moduleName === 'rozgar') {
         renderJobs();
         initExamList();
+      } else if (moduleName === 'skill') {
+        renderQuizQuestion();
+      } else if (moduleName === 'health') {
+        updatePregnancyWeek(document.getElementById('preg-week-slider').value);
       }
       
       saveState();
@@ -1210,10 +1251,12 @@
             body: JSON.stringify(payload)
           });
           console.log(`Supabase write ${tableName}:`, res.status);
+          return true;
         } catch (e) {
           console.error("Supabase write failed. Using local storage only.", e);
         }
       }
+      return false;
     }
 
     function saveSettings() {
@@ -1224,6 +1267,64 @@
       saveState();
       closeSettings();
       alert("API Credentials successfully saved locally!");
+    }
+
+    // ================= OFFLINE QUEUE CONTROLLER (New Feature!) =================
+    function queueAction(tableName, payload) {
+      if (navigator.onLine) {
+        saveSupabaseRecord(tableName, payload);
+      } else {
+        state.offlineQueue.push({ tableName, payload, timestamp: new Date() });
+        saveState();
+        updateOfflineQueueBanner();
+      }
+    }
+
+    function updateOfflineQueueBanner() {
+      const banner = document.getElementById('offline-queue-banner');
+      if (!banner) return;
+      if (state.offlineQueue && state.offlineQueue.length > 0) {
+        banner.classList.remove('hidden');
+        banner.innerHTML = `🔄 You have ${state.offlineQueue.length} unsynced actions. They will sync automatically when your internet reconnects. <button onclick="syncOfflineQueue()" class="underline ml-2 text-yellow-300">Sync Now</button>`;
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    async function syncOfflineQueue() {
+      if (!state.offlineQueue || state.offlineQueue.length === 0) return;
+      const banner = document.getElementById('offline-queue-banner');
+      banner.innerText = `Syncing ${state.offlineQueue.length} actions to Supabase server...`;
+      
+      let failed = [];
+      for (const item of state.offlineQueue) {
+        const success = await saveSupabaseRecord(item.tableName, item.payload);
+        if (!success) {
+          failed.push(item);
+        }
+      }
+      state.offlineQueue = failed;
+      saveState();
+      updateOfflineQueueBanner();
+      
+      if (failed.length === 0) {
+        alert("Success! All offline changes successfully synchronized to your Supabase tables.");
+      } else {
+        alert("Sync partially failed. Check your Supabase configuration keys.");
+      }
+    }
+
+    // ================= TEXT TO SPEECH (New Feature!) =================
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // cancel any active readout
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = state.lang === 'en' ? 'en-IN' : 'hi-IN'; // use Indian localized speech profile
+        utterance.rate = 0.9; // natural, slightly slower speed for clarity
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert("Your web browser does not support text-to-speech voice readouts.");
+      }
     }
 
     // ================= LANGUAGE TOGGLE =================
@@ -1344,6 +1445,22 @@
       return `BharatAI Assistant:\n\nThank you for asking. Based on local village demographics, we recommend utilizing official schemes like PM-Kisan or seeking collateral-free Mudra credit at public banks. Let us know if you need specific application format drafting templates!`;
     }
 
+    // Helper to format output display with Read Aloud option
+    function formatAIPanelOutput(boxElement, rawText) {
+      boxElement.innerHTML = `
+        <div class="whitespace-pre-wrap leading-relaxed text-slate-300 pr-2">${rawText}</div>
+        <div class="flex gap-2 mt-3 pt-2.5 border-t border-indigo-950/40">
+          <button onclick="speakText(this.parentElement.previousElementSibling.innerText)" class="px-3 py-1 bg-indigo-900 border border-indigo-700/40 hover:bg-indigo-800 rounded flex items-center gap-1.5 text-[10px] text-slate-200 transition font-semibold">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 text-secondary"></i> Read Aloud
+          </button>
+          <button onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.innerText); alert('Copied to clipboard!');" class="px-2.5 py-1 bg-indigo-950 border border-indigo-850 hover:bg-indigo-900 rounded text-[10px] text-slate-400 transition font-medium">
+            Copy Text
+          </button>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
     // ================= CHART RENDERING =================
     let mandiChart = null;
     function initMandiChart() {
@@ -1414,13 +1531,13 @@
       resBox.innerText = "Analyzing plant symptoms with AI diagnostic model...";
       
       const res = await queryAI(`Crop: ${name}. Symptoms: ${symptom}`);
-      resBox.innerText = res;
+      formatAIPanelOutput(resBox, res);
 
       // Persist log
       const log = { crop: name, symptom: symptom, diagnosis: res, timestamp: new Date() };
       state.savedPlans.push(log);
       saveState();
-      saveSupabaseRecord('saved_plans', { user_id: state.user.name, plan_type: 'crop', data: log });
+      queueAction('saved_plans', { user_id: state.user.name, plan_type: 'crop', data: log });
     }
 
     function analyzeSoil() {
@@ -1466,8 +1583,18 @@
 
       const reply = await queryAI(text, "Syllabus guidance");
       document.getElementById(loadingId).remove();
-      box.innerHTML += `<div class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%]">${reply}</div>`;
+      
+      // Inject speech synthesis hook support inside chat bubble
+      const messageId = 'msg-' + Date.now();
+      box.innerHTML += `
+        <div id="${messageId}" class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%] space-y-1">
+          <p>${reply}</p>
+          <button onclick="speakText(this.previousElementSibling.innerText)" class="text-[9px] text-secondary flex items-center gap-0.5 mt-1 underline">
+            <i data-lucide="volume-2" class="w-2.5 h-2.5"></i> Read Aloud
+          </button>
+        </div>`;
       box.scrollTop = box.scrollHeight;
+      lucide.createIcons();
     }
 
     async function exploreCareer() {
@@ -1477,12 +1604,12 @@
       box.innerText = "Drafting structured career trajectory...";
       
       const rep = await queryAI(`Career Explorer: ${sel.options[sel.selectedIndex].text}`);
-      box.innerText = rep;
+      formatAIPanelOutput(box, rep);
 
       const log = { career: sel.value, roadmap: rep, timestamp: new Date() };
       state.savedPlans.push(log);
       saveState();
-      saveSupabaseRecord('saved_plans', { user_id: state.user.name, plan_type: 'career', data: log });
+      queueAction('saved_plans', { user_id: state.user.name, plan_type: 'career', data: log });
     }
 
     function incrementStreak() {
@@ -1497,7 +1624,56 @@
         cells[todayCellIndex].className = "bg-orange-500 text-white rounded-full p-1 font-bold";
       }
       saveState();
-      saveSupabaseRecord('progress_logs', { user_id: state.user.name, streak: state.streakCount, timestamp: new Date() });
+      queueAction('progress_logs', { user_id: state.user.name, streak: state.streakCount, timestamp: new Date() });
+    }
+
+    // Interactive Student Quiz (New Feature!)
+    let currentQuestionIdx = 0;
+    const quizQuestions = [
+      { q: "What does 'WWW' stand for in computer systems?", o: ["World Wide Web", "World War Web", "Word Wide Web"], a: 0 },
+      { q: "Which soil nutrient is mostly replenished by planting legumes?", o: ["Potassium", "Phosphorus", "Nitrogen"], a: 2 },
+      { q: "What is the toll-free national helpline for women in distress?", o: ["181", "100", "108"], a: 0 }
+    ];
+
+    function renderQuizQuestion() {
+      const container = document.getElementById('quiz-container');
+      if (currentQuestionIdx >= quizQuestions.length) {
+        container.innerHTML = `
+          <div class="text-center space-y-2 py-3">
+            <p class="text-emerald-400 font-bold text-sm">🎉 Quiz Completed!</p>
+            <p class="text-slate-300">You scored 3/3 points. Keep learning daily!</p>
+            <button onclick="resetQuiz()" class="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold text-[10px] transition">Retry Quiz</button>
+          </div>
+        `;
+        return;
+      }
+      const q = quizQuestions[currentQuestionIdx];
+      container.innerHTML = `
+        <p class="font-semibold text-white">Question ${currentQuestionIdx + 1}: ${q.q}</p>
+        <div class="space-y-1.5 pt-1">
+          ${q.o.map((opt, idx) => `
+            <button onclick="submitAnswer(${idx})" class="w-full text-left bg-indigo-950/40 border border-indigo-900/60 p-2 rounded hover:bg-indigo-950 transition text-[11px] text-slate-300">
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function submitAnswer(idx) {
+      const q = quizQuestions[currentQuestionIdx];
+      if (idx === q.a) {
+        alert("Correct answer! +1 point.");
+      } else {
+        alert(`Incorrect! The correct answer was: ${q.o[q.a]}`);
+      }
+      currentQuestionIdx++;
+      renderQuizQuestion();
+    }
+
+    function resetQuiz() {
+      currentQuestionIdx = 0;
+      renderQuizQuestion();
     }
 
     // ================= HEALTHGUIDE SCRIPTS =================
@@ -1510,12 +1686,12 @@
       box.innerText = "Analyzing vital signs and diagnostic markers...";
 
       const rep = await queryAI(val, "Symptom evaluator");
-      box.innerText = rep;
+      formatAIPanelOutput(box, rep);
 
       const log = { symptom: val, analysis: rep, timestamp: new Date() };
       state.healthLogs.push(log);
       saveState();
-      saveSupabaseRecord('health_logs', { user_id: state.user.name, log_type: 'symptom', data: log });
+      queueAction('health_logs', { user_id: state.user.name, log_type: 'symptom', data: log });
     }
 
     function findHospitals() {
@@ -1555,7 +1731,7 @@
                 <p class="font-bold text-white">Delhi General Government PHC</p>
                 <p class="text-[10px] text-muted">1.2 km away | Doctor active</p>
               </div>
-              <button class="text-slate-400 text-xs">Default Location</button>
+              <button class="text-slate-400 text-xs font-semibold">Default Location</button>
             </div>
           `;
         }
@@ -1587,7 +1763,34 @@
         mr: document.getElementById('vac-mr').checked
       };
       saveState();
-      saveSupabaseRecord('health_logs', { user_id: state.user.name, log_type: 'vaccinations', data: state.vaccinations });
+      queueAction('health_logs', { user_id: state.user.name, log_type: 'vaccinations', data: state.vaccinations });
+    }
+
+    // Maternal Health Weekly Guide Slider Logic (New Feature!)
+    const pregnancyData = {
+      1: { tips: "Start taking Folic Acid daily. Avoid raw fish and excessive caffeine.", check: "Verify your blood tests and hemoglobin levels at nearest PHC." },
+      12: { tips: "Your baby is now the size of a plum. Morning sickness might start fading now.", check: "Book your first ultrasound check-up (NT scan)." },
+      24: { tips: "Feel the kicks! Keep walking daily for 30 minutes. Eat iron-rich foods (spinach, beetroot).", check: "Check blood sugar levels for gestational diabetes." },
+      36: { tips: "The baby is fully developed. Pack your hospital bag and review transport routes to PHC.", check: "Weekly blood pressure checks to monitor preeclampsia risk." }
+    };
+
+    function updatePregnancyWeek(val) {
+      document.getElementById('preg-week-display').innerText = val;
+      const content = document.getElementById('preg-week-content');
+      
+      // Find closest defined week in pregnancyData
+      let weekData = pregnancyData[val];
+      if (!weekData) {
+        if (val < 12) weekData = pregnancyData[1];
+        else if (val < 24) weekData = pregnancyData[12];
+        else if (val < 36) weekData = pregnancyData[24];
+        else weekData = pregnancyData[36];
+      }
+      
+      content.innerHTML = `
+        <p>💡 <strong>Nutrition & Tips:</strong> ${weekData.tips}</p>
+        <p class="mt-1.5">🩺 <strong>Health Checklist:</strong> ${weekData.check}</p>
+      `;
     }
 
     // ================= ROZGARAI (JOBS) =================
@@ -1621,7 +1824,7 @@
       alert(`Successfully registered interest for ${title}! The rural coordination officer will follow up.`);
       state.jobsApplied.push(title);
       saveState();
-      saveSupabaseRecord('job_applications', { user_id: state.user.name, job_title: title, status: 'Applied' });
+      queueAction('job_applications', { user_id: state.user.name, job_title: title, status: 'Applied' });
     }
 
     let interviewStep = 0;
@@ -1636,12 +1839,22 @@
 
       setTimeout(() => {
         interviewStep++;
+        let reply = "";
         if (interviewStep === 1) {
-          box.innerHTML += `<div class="bg-indigo-950/40 p-2 rounded max-w-[80%]">Great. Tell me about your experience working with local spreadsheets or manual logbooks.</div>`;
+          reply = "Great. Tell me about your experience working with local spreadsheets or manual logbooks.";
         } else {
-          box.innerHTML += `<div class="bg-indigo-950/40 p-2 rounded max-w-[80%]">Understood. That concludes our mock module. You handled communications extremely well!</div>`;
+          reply = "Understood. That concludes our mock module. You handled communications extremely well!";
         }
+        
+        box.innerHTML += `
+          <div class="bg-indigo-950/40 p-2 rounded max-w-[80%] space-y-1">
+            <p>${reply}</p>
+            <button onclick="speakText(this.previousElementSibling.innerText)" class="text-[9px] text-secondary flex items-center gap-0.5 underline">
+              <i data-lucide="volume-2" class="w-2.5 h-2.5"></i> Speak
+            </button>
+          </div>`;
         box.scrollTop = box.scrollHeight;
+        lucide.createIcons();
       }, 1000);
     }
 
@@ -1727,7 +1940,7 @@
       saveState();
       renderLedgerTable();
       initLedgerChart();
-      saveSupabaseRecord('business_records', { user_id: state.user.name, ...item });
+      queueAction('business_records', { user_id: state.user.name, ...item });
 
       document.getElementById('ledger-desc').value = '';
       document.getElementById('ledger-amount').value = '';
@@ -1740,12 +1953,12 @@
       box.innerText = "Drafting custom localized business roadmap...";
       
       const rep = await queryAI(`Create micro business plan for: ${type}`);
-      box.innerText = rep;
+      formatAIPanelOutput(box, rep);
 
       const log = { business: type, plan: rep, timestamp: new Date() };
       state.savedPlans.push(log);
       saveState();
-      saveSupabaseRecord('saved_plans', { user_id: state.user.name, plan_type: 'business', data: log });
+      queueAction('saved_plans', { user_id: state.user.name, plan_type: 'business', data: log });
     }
 
     function renderCrmList() {
@@ -1882,7 +2095,7 @@
       state.notices.unshift(notice);
       saveState();
       renderNotices();
-      saveSupabaseRecord('community_posts', notice);
+      queueAction('community_posts', notice);
       document.getElementById('notice-content').value = '';
     }
 
@@ -1915,7 +2128,7 @@
           <p class="text-[10px] text-muted">Eligible for Mudra loans to scale local setups. Approach nearest bank.</p>
         `;
       }
-      saveSupabaseRecord('scheme_matches', { user_id: state.user.name, scheme_name: scheme, eligible: true });
+      queueAction('scheme_matches', { user_id: state.user.name, scheme_name: scheme, eligible: true });
     }
 
     async function generateRTI() {
@@ -1928,10 +2141,7 @@
       box.innerText = "Drafting legal format for Public Records inspection...";
 
       const rep = await queryAI(`Generate RTI request for Department: ${dept}. Purpose: ${issue}`);
-      box.innerHTML = `
-        <pre class="whitespace-pre-wrap font-mono text-[10px] text-slate-300 leading-normal">${rep}</pre>
-        <button onclick="navigator.clipboard.writeText(this.previousElementSibling.innerText); alert('Copied RTI template!');" class="mt-2 text-[10px] text-blue-400 underline">Copy Letter</button>
-      `;
+      formatAIPanelOutput(box, rep);
     }
 
     // ================= INITIAL LOADING =================
@@ -1953,7 +2163,10 @@
       navigateTo(state.currentModule);
 
       // Listen for network changes
-      window.addEventListener('online', () => updateNetworkStatus(true));
+      window.addEventListener('online', () => {
+        updateNetworkStatus(true);
+        syncOfflineQueue(); // Trigger auto sync on reconnect!
+      });
       window.addEventListener('offline', () => updateNetworkStatus(false));
       updateNetworkStatus(navigator.onLine);
 
