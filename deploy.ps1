@@ -76,6 +76,12 @@ try {
     $res = Invoke-RestMethod -Uri "https://api.vercel.com/v13/deployments" -Method Post -Headers $headers -Body $bodyBytes
     Write-Host "`n🎉 Deployment Successful!" -ForegroundColor Green
     Write-Host "Live URL: https://$($res.url)" -ForegroundColor Yellow
+    
+    # Automatically map production alias
+    Write-Host "Routing production domain to new build..." -ForegroundColor Cyan
+    $aliasBody = @{ alias = "bharat-ai-sway.vercel.app" } | ConvertTo-Json
+    $aliasRes = Invoke-RestMethod -Uri "https://api.vercel.com/v2/deployments/$($res.id)/aliases" -Method Post -Headers $headers -Body $aliasBody
+    Write-Host "Production URL: https://bharat-ai-sway.vercel.app" -ForegroundColor Green
 } catch {
     Write-Error "Deployment failed: $_"
     if ($_.Exception.Response) {
