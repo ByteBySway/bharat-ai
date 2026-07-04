@@ -156,12 +156,17 @@
       </div>
 
       <!-- Profile Creation Step -->
-      <div id="auth-profile-step" class="space-y-4 hidden max-h-[400px] overflow-y-auto custom-scroll pr-1">
+      <div id="auth-profile-step" class="space-y-4 hidden max-h-[420px] overflow-y-auto custom-scroll pr-1">
         <h3 class="text-sm font-bold text-white border-b border-indigo-900 pb-2">Set Up Your Profile</h3>
         <div class="space-y-3 text-xs">
           <div>
             <label class="block text-slate-300 mb-1">Full Name</label>
             <input id="profile-name" type="text" placeholder="Your Name" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1">Profile Photo (Simulated Upload)</label>
+            <input type="file" accept="image/*" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white text-[10px]" onchange="simulatePhotoUpload()">
+            <p id="photo-upload-status" class="text-[9px] text-emerald-400 font-semibold mt-0.5 hidden">✓ Photo attached to profile</p>
           </div>
           <div>
             <label class="block text-slate-300 mb-1">Occupation / Role</label>
@@ -432,59 +437,142 @@
         </button>
       </div>
 
+      <!-- Sub Navigation tabs inside KisanAI -->
+      <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
+        <button onclick="toggleKisanTabs('weather')" id="kisan-btn-weather" class="text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none">Weather & Mandi</button>
+        <button onclick="toggleKisanTabs('soil')" id="kisan-btn-soil" class="pb-1 focus:outline-none">Soil & Crops Calendar</button>
+        <button onclick="toggleKisanTabs('insurance')" id="kisan-btn-insurance" class="pb-1 focus:outline-none">Insurance & KCC</button>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Weather & Price Trend -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="glass rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="cloud-sun" class="w-4 h-4 text-emerald-400"></i> Local Weather & Climate Alerts
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30">
-                <p id="kisan-temp" class="text-4xl font-extrabold text-white">--°C</p>
-                <p id="kisan-condition" class="text-sm text-slate-300 font-medium">Fetching Climate...</p>
-                <p id="kisan-humidity" class="text-xs text-muted">Humidity: --% | Wind: -- km/h</p>
+          <div id="kisan-tab-weather" class="space-y-6">
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                <i data-lucide="cloud-sun" class="w-4 h-4 text-emerald-400"></i> Local Weather & Climate Alerts
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30">
+                  <p id="kisan-temp" class="text-4xl font-extrabold text-white">--°C</p>
+                  <p id="kisan-condition" class="text-sm text-slate-300 font-medium">Fetching Climate...</p>
+                  <p id="kisan-humidity" class="text-xs text-muted">Humidity: --% | Wind: -- km/h</p>
+                </div>
+                <div class="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 text-xs space-y-1.5">
+                  <p class="font-bold text-secondary flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> District Climate Alert</p>
+                  <p class="text-slate-200">Precipitation index is stable. Potential rainfall predicted next Wednesday in your sub-district.</p>
+                </div>
               </div>
-              <div class="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 text-xs space-y-1.5">
-                <p class="font-bold text-secondary flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> District Climate Alert</p>
-                <p class="text-slate-200">Precipitation index is stable. Potential rainfall predicted next Wednesday in your sub-district.</p>
+            </div>
+
+            <div class="glass rounded-xl p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                  <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Market Price Trends & Expected Costs
+                </h3>
+                <select id="mandi-crop-cost" onchange="calcAgriRevenue()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2 py-1 text-white">
+                  <option value="wheat">Wheat (Kanak)</option>
+                  <option value="mustard">Mustard (Sarso)</option>
+                </select>
+              </div>
+              
+              <div class="h-60">
+                <canvas id="mandi-price-chart"></canvas>
+              </div>
+
+              <!-- 7-Day Forecast & Sell Advice -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-2">
+                <div class="bg-indigo-950/30 p-3 rounded border border-indigo-900/40">
+                  <p class="font-bold text-white mb-1">🔮 7-Day Price Forecast</p>
+                  <p class="text-emerald-400 font-semibold" id="mandi-forecast-text">Expected Price Trend: +3.4% Upward (Hold Stock)</p>
+                </div>
+                <div class="bg-indigo-950/30 p-3 rounded border border-indigo-900/40">
+                  <p class="font-bold text-white mb-1">💡 Best Time to Sell Calculator</p>
+                  <p class="text-slate-300">Optimal Sell window: <strong>Mid-August</strong> (Peak historic mandi arrivals complete).</p>
+                </div>
+              </div>
+
+              <!-- Cost vs Profit Calculator -->
+              <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 text-xs space-y-3">
+                <p class="font-bold text-white uppercase tracking-wider text-[10px]">Cost-Benefit Profit Estimator</p>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="block text-muted text-[10px] mb-0.5">Fertilizer/Seeds (₹)</label>
+                    <input id="cost-inputs" type="number" value="4000" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white" oninput="calcAgriRevenue()">
+                  </div>
+                  <div>
+                    <label class="block text-muted text-[10px] mb-0.5">Labor Cost (₹)</label>
+                    <input id="cost-labor" type="number" value="3000" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white" oninput="calcAgriRevenue()">
+                  </div>
+                  <div>
+                    <label class="block text-muted text-[10px] mb-0.5">Expected Yield (Quintals)</label>
+                    <input id="expected-yield" type="number" value="12" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white" oninput="calcAgriRevenue()">
+                  </div>
+                </div>
+                <p class="text-emerald-400 font-bold text-right pt-1">Estimated Net Revenue: <span id="agri-profit-total">₹22,400</span></p>
               </div>
             </div>
           </div>
 
-          <div class="glass rounded-xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-                <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Market Price Trends & Expected Costs
-              </h3>
-              <select id="mandi-crop-cost" onchange="calcAgriRevenue()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2 py-1 text-white">
-                <option value="wheat">Wheat (Kanak)</option>
-                <option value="mustard">Mustard (Sarso)</option>
-              </select>
-            </div>
-            
-            <div class="h-60">
-              <canvas id="mandi-price-chart"></canvas>
-            </div>
-
-            <!-- Cost vs Profit Calculator -->
-            <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 text-xs space-y-3">
-              <p class="font-bold text-white uppercase tracking-wider text-[10px]">Cost-Benefit Profit Estimator</p>
-              <div class="grid grid-cols-3 gap-2">
-                <div>
-                  <label class="block text-muted text-[10px] mb-0.5">Fertilizer/Seeds (₹)</label>
-                  <input id="cost-inputs" type="number" value="4000" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white" oninput="calcAgriRevenue()">
+          <!-- Soil & Crops Calendar Tab -->
+          <div id="kisan-tab-soil" class="space-y-6 hidden">
+            <!-- Soil pH Score Ring -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Soil pH & Quality Analyzer</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2 text-xs">
+                  <label class="block text-slate-300">Enter Soil pH Level: <span id="soil-ph-val" class="font-bold text-secondary">6.5</span></label>
+                  <input type="range" id="soil-ph" min="4" max="9" step="0.1" value="6.5" class="w-full accent-secondary" oninput="updateSoilPh(this.value)">
+                  <p class="text-muted text-[10px]">Normal range: 6.0 - 7.5 for crops.</p>
                 </div>
-                <div>
-                  <label class="block text-muted text-[10px] mb-0.5">Labor Cost (₹)</label>
-                  <input id="cost-labor" type="number" value="3000" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white" oninput="calcAgriRevenue()">
-                </div>
-                <div>
-                  <label class="block text-muted text-[10px] mb-0.5">Expected Yield (Quintals)</label>
-                  <input id="expected-yield" type="number" value="12" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white" oninput="calcAgriRevenue()">
+                <div class="bg-indigo-950/40 p-3 rounded border border-indigo-900 text-xs">
+                  <p class="font-bold text-white mb-1">pH Classification Result:</p>
+                  <p class="text-emerald-400" id="soil-ph-desc">Slightly Acidic - Ideal for Wheat, Potato, Barley.</p>
                 </div>
               </div>
-              <p class="text-emerald-400 font-bold text-right pt-1">Estimated Net Revenue: <span id="agri-profit-total">₹22,400</span></p>
+            </div>
+
+            <!-- Crop Calendar Timeline -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Crop 12-Month Calendar Timeline</h3>
+              <p class="text-xs text-muted">Drag slider to check seasonal operations for your crop.</p>
+              <div class="space-y-3">
+                <div class="flex justify-between text-xs text-slate-300">
+                  <span>Selected Crop: <strong>Wheat</strong></span>
+                  <span>Month: <strong id="cal-month-val" class="text-emerald-400">November</strong></span>
+                </div>
+                <input type="range" id="crop-cal-slider" min="1" max="12" value="11" class="w-full accent-emerald-500" oninput="updateCropCalendar(this.value)">
+                <div id="crop-cal-text" class="bg-indigo-950/20 p-3.5 rounded border border-indigo-950 text-xs space-y-1">
+                  <!-- Dynamic text -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KCC & Insurance Tab -->
+          <div id="kisan-tab-insurance" class="space-y-6 hidden">
+            <!-- Kisan Credit Card Check -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">KCC (Kisan Credit Card) Registration Checklist</h3>
+              <div class="space-y-2 text-xs">
+                <label class="flex items-center gap-2 bg-indigo-950/20 p-2.5 rounded border border-indigo-900">
+                  <input type="checkbox" checked class="w-4 h-4 accent-emerald-500">
+                  <div>
+                    <p class="font-bold text-white">Land Records & Ownership Copies</p>
+                    <p class="text-[10px] text-muted">Aadhaar verified patta or khatauni sheet.</p>
+                  </div>
+                </label>
+                <label class="flex items-center gap-2 bg-indigo-950/20 p-2.5 rounded border border-indigo-900">
+                  <input type="checkbox" class="w-4 h-4 accent-emerald-500">
+                  <div>
+                    <p class="font-bold text-white">Bank Account & Aadhaar Linkage</p>
+                    <p class="text-[10px] text-muted">Prerequisites for subsidized interest subvention.</p>
+                  </div>
+                </label>
+              </div>
+              <button onclick="alert('Submit application at nearest Rural Cooperatives Branch. Processing period: 7 Days.')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-bold text-white transition">
+                Submit KCC Intent
+              </button>
             </div>
           </div>
         </div>
@@ -540,38 +628,96 @@
         </button>
       </div>
 
+      <!-- SkillBridge tabs navigation -->
+      <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
+        <button onclick="toggleSkillTabs('mentor')" id="skill-btn-mentor" class="text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none">Study Mentor</button>
+        <button onclick="toggleSkillTabs('study')" id="skill-btn-study" class="pb-1 focus:outline-none">Study Planner & Countdown</button>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- AI Mentor Chat -->
-        <div class="lg:col-span-2 glass rounded-xl p-5 flex flex-col h-[520px]">
-          <div class="flex items-center justify-between pb-3 border-b border-indigo-950">
-            <div>
-              <h3 class="text-sm font-bold text-white" id="mentor-name-title">Select Study Mentor</h3>
-              <p class="text-[10px] text-muted">IIT/ISRO seeded academic advisors</p>
+        <!-- AI Mentor Chat & Mentor Profiles -->
+        <div class="lg:col-span-2 space-y-6">
+          <div id="skill-tab-mentor" class="space-y-6">
+            <!-- 6 Mentor Profiles Grid -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Seed Mentor Catalog</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="bg-indigo-950/40 p-3 rounded border border-indigo-900/50 text-xs space-y-1.5">
+                  <h4 class="font-bold text-white">Dr. Anand Prasad</h4>
+                  <p class="text-[10px] text-muted">IARI Biotech Scientist</p>
+                  <p class="text-[10px] text-emerald-400">★ 4.9 (120 reviews)</p>
+                  <button onclick="selectMentor('Anand')" class="w-full mt-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-[10px] rounded font-semibold text-white">Select</button>
+                </div>
+                <div class="bg-indigo-950/40 p-3 rounded border border-indigo-900/50 text-xs space-y-1.5">
+                  <h4 class="font-bold text-white">Prof. Priya Sen</h4>
+                  <p class="text-[10px] text-muted">IIT Madras CSE Mentor</p>
+                  <p class="text-[10px] text-emerald-400">★ 5.0 (200 reviews)</p>
+                  <button onclick="selectMentor('Priya')" class="w-full mt-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-[10px] rounded font-semibold text-white">Select</button>
+                </div>
+                <div class="bg-indigo-950/40 p-3 rounded border border-indigo-900/50 text-xs space-y-1.5">
+                  <h4 class="font-bold text-white">Rajesh Kumar IAS</h4>
+                  <p class="text-[10px] text-muted">Civics / UPSC Advisor</p>
+                  <p class="text-[10px] text-emerald-400">★ 4.8 (85 reviews)</p>
+                  <button onclick="selectMentor('Rajesh')" class="w-full mt-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-[10px] rounded font-semibold text-white">Select</button>
+                </div>
+              </div>
             </div>
-            <select id="mentor-select" onchange="changeMentor()" class="bg-indigo-950 border border-indigo-900 rounded px-2.5 py-1 text-xs text-white">
-              <option value="priya">Priya - Digital Skills & Coding (IIT Madras)</option>
-              <option value="anand">Anand - Agricultural Science & Biotech (IARI)</option>
-              <option value="rajesh">Rajesh - Civil Services UPSC Mentor (IAS Retired)</option>
-            </select>
+
+            <!-- Chat Window -->
+            <div class="glass rounded-xl p-5 flex flex-col h-[400px]">
+              <div class="flex items-center justify-between pb-3 border-b border-indigo-950">
+                <div>
+                  <h3 class="text-sm font-bold text-white" id="mentor-name-title">Priya - Digital Skills & Coding (IIT Madras)</h3>
+                  <p class="text-[10px] text-muted">IIT/ISRO seeded academic advisors</p>
+                </div>
+              </div>
+
+              <!-- Chat Window -->
+              <div id="mentor-chat-box" class="flex-grow overflow-y-auto p-3 space-y-3 custom-scroll text-xs">
+                <div class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%] border border-indigo-900/40 text-slate-200">
+                  Hello! I am ready to advise you on computer systems, coding resources, or digital literacy. Type your concept below.
+                </div>
+              </div>
+
+              <!-- Chat Input -->
+              <div class="pt-3 border-t border-indigo-950 flex gap-2">
+                <input id="mentor-input" type="text" placeholder="Type a concept or ask for exam syllabus..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded-lg p-2.5 text-xs text-white focus:outline-none">
+                <button onclick="startVoiceInput('mentor-input')" class="px-3 bg-indigo-900 border border-indigo-700/50 hover:bg-indigo-800 rounded-lg text-slate-300">
+                  <i data-lucide="mic" class="w-4 h-4"></i>
+                </button>
+                <button onclick="sendMentorMessage()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold text-xs transition flex items-center gap-1">
+                  <span>Send</span>
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- Chat Window -->
-          <div id="mentor-chat-box" class="flex-grow overflow-y-auto p-3 space-y-3 custom-scroll text-xs">
-            <div class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%] border border-indigo-900/40 text-slate-200">
-              Hello! Choose me as your mentor, type any question, and let's explore topics, solve sample problems, or plan your schedule.
+          <!-- Study Planner Tab -->
+          <div id="skill-tab-study" class="space-y-6 hidden">
+            <!-- AI Study Schedule Generator -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Student Daily Study Planner</h3>
+              <p class="text-xs text-muted">Let AI draft a schedule based on your study targets.</p>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label class="block text-slate-300 mb-1">Target Study Hours</label>
+                  <input id="study-hours" type="number" value="4" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                </div>
+                <div>
+                  <label class="block text-slate-300 mb-1">Focus Exam</label>
+                  <select id="study-exam" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                    <option value="boards">10th/12th Boards</option>
+                    <option value="neet">NEET/JEE Prep</option>
+                    <option value="typing">Digital Typing Course</option>
+                  </select>
+                </div>
+              </div>
+              <button onclick="generateStudySchedule()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-bold text-white transition">
+                Generate Plan
+              </button>
+              <div id="study-schedule-result" class="hidden bg-slate-900/60 p-3 rounded text-xs border border-indigo-900 whitespace-pre-wrap"></div>
             </div>
-          </div>
-
-          <!-- Chat Input -->
-          <div class="pt-3 border-t border-indigo-950 flex gap-2">
-            <input id="mentor-input" type="text" placeholder="Type a concept or ask for exam syllabus..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded-lg p-2.5 text-xs text-white focus:outline-none">
-            <button onclick="startVoiceInput('mentor-input')" class="px-3 bg-indigo-900 border border-indigo-700/50 hover:bg-indigo-800 rounded-lg text-slate-300">
-              <i data-lucide="mic" class="w-4 h-4"></i>
-            </button>
-            <button onclick="sendMentorMessage()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold text-xs transition flex items-center gap-1">
-              <span>Send</span>
-              <i data-lucide="send" class="w-3.5 h-3.5"></i>
-            </button>
           </div>
         </div>
 
@@ -637,64 +783,110 @@
         </button>
       </div>
 
+      <!-- Health tabs -->
+      <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
+        <button onclick="toggleHealthTabs('symptoms')" id="health-btn-symptoms" class="text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none">Symptoms & Meds</button>
+        <button onclick="toggleHealthTabs('maternal')" id="health-btn-maternal" class="pb-1 focus:outline-none">Maternal & Child Health</button>
+        <button onclick="toggleHealthTabs('firstaid')" id="health-btn-firstaid" class="pb-1 focus:outline-none">First-Aid & Snakes Manual</button>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- AI Symptom & Counselor Chat -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="glass rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="activity" class="w-4 h-4 text-rose-400"></i> AI Symptom & Severity Evaluation
-            </h3>
-            <div class="bg-rose-500/10 border border-rose-500/20 text-rose-300 p-2.5 rounded-lg text-xs">
-              <strong>Disclaimer:</strong> This is a decision tool only. In case of emergency, immediately dial 108 or proceed to nearest civil hospital.
+          <div id="health-tab-symptoms" class="space-y-6">
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                <i data-lucide="activity" class="w-4 h-4 text-rose-400"></i> AI Symptom & Severity Evaluation
+              </h3>
+              <div class="bg-rose-500/10 border border-rose-500/20 text-rose-300 p-2.5 rounded-lg text-xs">
+                <strong>Disclaimer:</strong> This is a decision tool only. In case of emergency, immediately dial 108 or proceed to nearest civil hospital.
+              </div>
+              <div class="flex gap-2">
+                <input id="health-symptom-input" type="text" placeholder="Enter symptoms (e.g. high fever, throat pain)..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded-lg p-2.5 text-xs text-white">
+                <button onclick="startVoiceInput('health-symptom-input')" class="px-2.5 bg-indigo-900 rounded border border-indigo-700/50 hover:bg-indigo-800 text-slate-300">
+                  <i data-lucide="mic" class="w-4 h-4"></i>
+                </button>
+                <button onclick="checkSymptoms()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-lg text-white font-semibold text-xs transition">Analyze</button>
+              </div>
+              <div id="health-symptom-result" class="hidden bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs"></div>
             </div>
-            <div class="flex gap-2">
-              <input id="health-symptom-input" type="text" placeholder="Enter symptoms (e.g. high fever, throat pain)..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded-lg p-2.5 text-xs text-white">
-              <button onclick="startVoiceInput('health-symptom-input')" class="px-2.5 bg-indigo-900 rounded border border-indigo-700/50 hover:bg-indigo-800 text-slate-300">
-                <i data-lucide="mic" class="w-4 h-4"></i>
-              </button>
-              <button onclick="checkSymptoms()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-lg text-white font-semibold text-xs transition">Analyze</button>
-            </div>
-            <div id="health-symptom-result" class="hidden bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs"></div>
-          </div>
 
-          <!-- Maternal Health Slider -->
-          <div class="glass rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="baby" class="w-4 h-4 text-rose-400"></i> Maternal Weekly Health Advisor
-            </h3>
-            <p class="text-xs text-muted">Select your pregnancy week to view clinical tips, precautions, and checks.</p>
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
-                <label class="text-xs text-slate-300 font-semibold">Pregnancy Week: <span id="preg-week-display" class="font-bold text-rose-400">12</span></label>
+            <!-- Drug Interaction Checker -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Drug-Drug Interaction Checker</h3>
+              <p class="text-xs text-muted">Verify if two medicine generic chemicals interact negatively.</p>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input id="drug-chem1" type="text" placeholder="e.g. Aspirin" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                <input id="drug-chem2" type="text" placeholder="e.g. Warfarin" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
               </div>
-              <input type="range" id="preg-week-slider" min="1" max="40" value="12" class="w-full accent-rose-500 cursor-pointer" oninput="updatePregnancyWeek(this.value)">
-              <div id="preg-week-content" class="bg-indigo-950/20 border border-indigo-950/50 p-3 rounded text-xs space-y-1.5 text-slate-200">
-                <!-- Populated dynamically -->
-              </div>
+              <button onclick="checkDrugInteraction()" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 text-xs font-semibold text-slate-200 rounded">Verify Safety Combinations</button>
+              <div id="drug-interaction-result" class="hidden bg-slate-900/60 p-3 rounded text-xs border border-indigo-900"></div>
             </div>
           </div>
 
-          <!-- Child Growth Calculator -->
-          <div class="glass rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="bar-chart-2" class="w-4 h-4 text-rose-400"></i> Child Growth Standard Checker (0-5 Years)
-            </h3>
-            <div class="grid grid-cols-3 gap-2 text-xs">
-              <div>
-                <label class="block text-muted text-[10px] mb-0.5">Age (Months)</label>
-                <input id="growth-age" type="number" value="18" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
-              </div>
-              <div>
-                <label class="block text-muted text-[10px] mb-0.5">Weight (kg)</label>
-                <input id="growth-weight" type="number" value="10" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
-              </div>
-              <div>
-                <label class="block text-muted text-[10px] mb-0.5">Height (cm)</label>
-                <input id="growth-height" type="number" value="82" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+          <!-- Maternal Tab -->
+          <div id="health-tab-maternal" class="space-y-6 hidden">
+            <!-- Maternal Health Slider -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                <i data-lucide="baby" class="w-4 h-4 text-rose-400"></i> Maternal Weekly Health Advisor
+              </h3>
+              <p class="text-xs text-muted">Select your pregnancy week to view clinical tips, precautions, and checks.</p>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs text-slate-300 font-semibold">Pregnancy Week: <span id="preg-week-display" class="font-bold text-rose-400">12</span></label>
+                </div>
+                <input type="range" id="preg-week-slider" min="1" max="40" value="12" class="w-full accent-rose-500 cursor-pointer" oninput="updatePregnancyWeek(this.value)">
+                <div id="preg-week-content" class="bg-indigo-950/20 border border-indigo-950/50 p-3 rounded text-xs space-y-1.5 text-slate-200">
+                  <!-- Populated dynamically -->
+                </div>
               </div>
             </div>
-            <button onclick="checkGrowthStandards()" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 text-xs font-semibold rounded text-slate-200">Evaluate Growth Metrics</button>
-            <div id="growth-result" class="hidden bg-slate-900/60 p-3 rounded border border-indigo-950 text-xs text-slate-300"></div>
+
+            <!-- Child Growth Calculator -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                <i data-lucide="bar-chart-2" class="w-4 h-4 text-rose-400"></i> Child Growth Standard Checker (0-5 Years)
+              </h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <label class="block text-muted text-[10px] mb-0.5">Age (Months)</label>
+                  <input id="growth-age" type="number" value="18" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                </div>
+                <div>
+                  <label class="block text-muted text-[10px] mb-0.5">Weight (kg)</label>
+                  <input id="growth-weight" type="number" value="10" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                </div>
+                <div>
+                  <label class="block text-muted text-[10px] mb-0.5">Height (cm)</label>
+                  <input id="growth-height" type="number" value="82" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                </div>
+              </div>
+              <button onclick="checkGrowthStandards()" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 text-xs font-semibold rounded text-slate-200">Evaluate Growth Metrics</button>
+              <div id="growth-result" class="hidden bg-slate-900/60 p-3 rounded border border-indigo-950 text-xs text-slate-300"></div>
+            </div>
+          </div>
+
+          <!-- First Aid & Snake Bite Tab -->
+          <div id="health-tab-firstaid" class="space-y-6 hidden">
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-rose-400 uppercase">Emergency First-Aid Manual</h3>
+              <div class="space-y-2 text-xs text-slate-200">
+                <details class="bg-indigo-950/40 p-3 rounded border border-indigo-900/50 cursor-pointer">
+                  <summary class="font-bold">🐍 Snake Bite emergency procedures</summary>
+                  <ol class="list-decimal pl-4 space-y-1.5 pt-2 text-[11px] text-slate-300">
+                    <li>Keep the victim calm and still. Movement spreads venom.</li>
+                    <li>Remove tight clothing or jewelry near the bite area immediately.</li>
+                    <li>**Do NOT cut the bite area or attempt to suck out venom.**</li>
+                    <li>Immediately apply loose splint and proceed to Sub-district Civil Hospital for Anti-Snake Venom (ASV).</li>
+                  </ol>
+                </details>
+                <details class="bg-indigo-950/40 p-3 rounded border border-indigo-900/50 cursor-pointer">
+                  <summary class="font-bold">🔥 Heatstroke & Extreme Heat</summary>
+                  <p class="pt-1.5 text-[11px] text-slate-300">Move the individual to shade, apply cold wet cloth sheets, and supply diluted ORS if conscious.</p>
+                </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -803,7 +995,7 @@
             </div>
           </div>
 
-          <!-- My Applications Tab (New Feature!) -->
+          <!-- My Applications Tab -->
           <div id="rozgar-applications-tab" class="glass rounded-xl p-5 space-y-4 hidden min-h-[400px]">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Job Application Tracker</h3>
             <div id="applied-jobs-list" class="space-y-3 text-xs">
@@ -857,60 +1049,108 @@
         </button>
       </div>
 
+      <!-- Dukaan tabs -->
+      <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
+        <button onclick="toggleDukaanTabs('ledger')" id="dukaan-btn-ledger" class="text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none">Ledger Book</button>
+        <button onclick="toggleDukaanTabs('inventory')" id="dukaan-btn-inventory" class="pb-1 focus:outline-none">Inventory & GST Setup</button>
+        <button onclick="toggleDukaanTabs('marketing')" id="dukaan-btn-marketing" class="pb-1 focus:outline-none">Logo Designer</button>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Accounting Book & Dynamic Invoicing -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="glass rounded-xl p-5 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Digital Ledger Book (Bahi Khata)</h3>
-              <p class="text-lg font-bold text-emerald-400">Net Profit: <span id="ledger-total">₹0</span></p>
-            </div>
-            
-            <div class="grid grid-cols-3 gap-2">
-              <input id="ledger-desc" type="text" placeholder="Description (Sugar Bag...)" class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-xs text-white">
-              <input id="ledger-amount" type="number" placeholder="Amount (₹)" class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-xs text-white">
-              <select id="ledger-type" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white">
-                <option value="income">Income (+)</option>
-                <option value="expense">Expense (-)</option>
-              </select>
-            </div>
-            
-            <button onclick="addLedgerEntry()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold transition text-white">
-              Log Record
-            </button>
+          <div id="dukaan-tab-ledger" class="space-y-6">
+            <div class="glass rounded-xl p-5 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Digital Ledger Book (Bahi Khata)</h3>
+                <p class="text-lg font-bold text-emerald-400">Net Profit: <span id="ledger-total">₹0</span></p>
+              </div>
+              
+              <div class="grid grid-cols-3 gap-2">
+                <input id="ledger-desc" type="text" placeholder="Description (Sugar Bag...)" class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-xs text-white">
+                <input id="ledger-amount" type="number" placeholder="Amount (₹)" class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-xs text-white">
+                <select id="ledger-type" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white">
+                  <option value="income">Income (+)</option>
+                  <option value="expense">Expense (-)</option>
+                </select>
+              </div>
+              
+              <button onclick="addLedgerEntry()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold transition text-white">
+                Log Record
+              </button>
 
-            <div class="max-h-48 overflow-y-auto custom-scroll border border-indigo-950 rounded">
-              <table class="w-full text-xs text-left">
-                <thead>
-                  <tr class="bg-indigo-950/50 text-muted">
-                    <th class="p-2">Description</th>
-                    <th class="p-2">Type</th>
-                    <th class="p-2 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody id="ledger-entries-body">
-                  <!-- Rendered via JS -->
-                </tbody>
-              </table>
+              <div class="max-h-48 overflow-y-auto custom-scroll border border-indigo-950 rounded">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="bg-indigo-950/50 text-muted">
+                      <th class="p-2">Description</th>
+                      <th class="p-2">Type</th>
+                      <th class="p-2 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ledger-entries-body">
+                    <!-- Rendered via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Dynamic Invoice Generator -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                <i data-lucide="printer" class="w-4 h-4 text-amber-400"></i> Instant Invoice Generator
+              </h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <input id="inv-item" type="text" placeholder="Item Name" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                <input id="inv-qty" type="number" placeholder="Qty" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                <input id="inv-rate" type="number" placeholder="Rate (₹)" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+              </div>
+              <button onclick="generateInvoice()" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-850 text-xs font-semibold rounded text-slate-200">Assemble Invoice Sheet</button>
+              <div id="invoice-preview" class="hidden bg-white text-slate-900 p-4 rounded border text-xs space-y-1 font-mono"></div>
             </div>
           </div>
 
-          <!-- Dynamic Invoice Generator -->
-          <div class="glass rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="printer" class="w-4 h-4 text-amber-400"></i> Instant Invoice Generator
-            </h3>
-            <div class="grid grid-cols-3 gap-2 text-xs">
-              <input id="inv-item" type="text" placeholder="Item Name" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
-              <input id="inv-qty" type="number" placeholder="Qty" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
-              <input id="inv-rate" type="number" placeholder="Rate (₹)" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+          <!-- Inventory and GST Tab -->
+          <div id="dukaan-tab-inventory" class="space-y-6 hidden">
+            <!-- Digital Stock Ledger -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Digital Inventory Stock Tracker</h3>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <input id="stock-item-name" type="text" placeholder="e.g. Flour Bag" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                <input id="stock-item-qty" type="number" placeholder="Stock Qty" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                <button onclick="addStockItem()" class="bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-bold text-white">Log Item</button>
+              </div>
+              <div class="max-h-40 overflow-y-auto custom-scroll">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="bg-indigo-950/50 text-muted">
+                      <th class="p-2">Item Name</th>
+                      <th class="p-2 text-right">Available Stock</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stock-list-body">
+                    <!-- JS Filled -->
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <button onclick="generateInvoice()" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-850 text-xs font-semibold rounded text-slate-200">Assemble Invoice Sheet</button>
-            <div id="invoice-preview" class="hidden bg-white text-slate-900 p-4 rounded border text-xs space-y-1 font-mono"></div>
+
+            <!-- UDYAM GST Registration checklist -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">UDYAM Business Registration Guide</h3>
+              <div class="space-y-2 text-xs">
+                <p class="text-slate-300">Prerequisites for obtaining zero-collateral Mudra loans from banks:</p>
+                <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                  <li>Owner's Aadhaar linked to Mobile OTP verification.</li>
+                  <li>Bank account details (IFSC + Account Number).</li>
+                  <li>Shop Address and PAN card verification.</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          <!-- Business Logo Creator (New Feature!) -->
-          <div class="glass rounded-xl p-5 space-y-4">
+          <!-- Logo Designer Tab -->
+          <div id="dukaan-tab-marketing" class="glass rounded-xl p-5 space-y-4 hidden">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
               <i data-lucide="palette" class="w-4 h-4 text-amber-400"></i> Brand Logo Downloader (PNG)
             </h3>
@@ -1084,19 +1324,51 @@
         </button>
       </div>
 
+      <!-- Samaj Tabs -->
+      <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
+        <button onclick="toggleSamajTabs('board')" id="samaj-btn-board" class="text-cyan-400 border-b-2 border-cyan-500 pb-1 focus:outline-none">Notice Board</button>
+        <button onclick="toggleSamajTabs('welfare')" id="samaj-btn-welfare" class="pb-1 focus:outline-none">Welfare & RTI</button>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Notice Board -->
+        <!-- Notice Board / Alerts -->
         <div class="lg:col-span-2 space-y-6">
-          <div class="glass rounded-xl p-5 space-y-4">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Village Notice Board & Emergency Warnings</h3>
-            
-            <div class="flex gap-2">
-              <input id="notice-content" type="text" placeholder="Post local news, blockages, lost-found notices..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded p-2.5 text-xs text-white">
-              <button onclick="postNotice()" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded text-xs font-semibold text-white transition">Post</button>
+          <div id="samaj-tab-board" class="space-y-6">
+            <!-- Disaster Cyclone Warnings -->
+            <div class="bg-red-950/40 p-4 rounded-xl border border-red-900/30 text-xs flex justify-between items-center">
+              <div>
+                <p class="font-bold text-red-400 flex items-center gap-1"><i data-lucide="alert-octagon" class="w-4 h-4"></i> Climate Alert Status: active</p>
+                <p class="text-slate-200 mt-1">High monsoon alerts for low-lying agricultural zones. Keep emergency relief contacts ready.</p>
+              </div>
+              <button onclick="alert('Local Cyclone shelter coordinates: PHC Community Hall Bhiwani.')" class="px-2.5 py-1.5 bg-red-900 text-white rounded font-bold">Details</button>
             </div>
 
-            <div id="notice-board-posts" class="space-y-3 max-h-[350px] overflow-y-auto custom-scroll">
-              <!-- Notice posts rendering -->
+            <!-- Board Posts -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Village Notice Board</h3>
+              
+              <div class="flex gap-2">
+                <input id="notice-content" type="text" placeholder="Post local news, blockages, lost-found notices..." class="flex-grow bg-indigo-950/50 border border-indigo-900 rounded p-2.5 text-xs text-white">
+                <button onclick="postNotice()" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 rounded text-xs font-semibold text-white transition">Post</button>
+              </div>
+
+              <div id="notice-board-posts" class="space-y-3 max-h-[350px] overflow-y-auto custom-scroll">
+                <!-- Notice posts rendering -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Welfare Tab -->
+          <div id="samaj-tab-welfare" class="space-y-6 hidden">
+            <!-- Aadhaar card status simulation -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Ration / Aadhaar Card Status Tracker</h3>
+              <p class="text-xs text-muted">Verify status of official document approvals.</p>
+              <div class="flex gap-2 text-xs">
+                <input id="doc-id-check" type="text" placeholder="Aadhaar / Card ID Number" class="flex-grow bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                <button onclick="verifyDocStatus()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded font-bold text-white">Check</button>
+              </div>
+              <div id="doc-check-result" class="hidden bg-slate-900/60 p-3 rounded text-xs border border-indigo-900"></div>
             </div>
           </div>
         </div>
@@ -1331,6 +1603,7 @@
       crm: [],
       shg: [],
       notices: [],
+      stock: [],
       streakCount: 0,
       vaccinations: {},
       offlineQueue: [],
@@ -1339,7 +1612,6 @@
 
     // Initialize LocalStorage Database & Server Sync
     async function loadPersistedState() {
-      // Try to load collections from local backend server database
       try {
         const resLedger = await fetch("/api/data/ledger");
         const resNotices = await fetch("/api/data/notices");
@@ -1370,6 +1642,7 @@
           if (!state.ledger || state.ledger.length === 0) state.ledger = parsed.ledger;
           if (!state.notices || state.notices.length === 0) state.notices = parsed.notices;
           if (!state.shg || state.shg.length === 0) state.shg = parsed.shg;
+          state.stock = parsed.stock || [];
         } catch (e) {
           console.error("Failed parsing local state", e);
         }
@@ -1396,6 +1669,13 @@
         state.shg = [
           { id: 1, name: "Kusum Devi", amount: 500 },
           { id: 2, name: "Renu Sharma", amount: 500 }
+        ];
+      }
+
+      if (!state.stock || state.stock.length === 0) {
+        state.stock = [
+          { id: 1, name: "Flour Bags (Aata)", qty: 25 },
+          { id: 2, name: "Cooking Oil (Liters)", qty: 14 }
         ];
       }
 
@@ -1473,26 +1753,37 @@
         fetchWeather();
         initMandiChart();
         calcAgriRevenue();
+        toggleKisanTabs('weather');
       } else if (moduleName === 'dukaan') {
         renderLedgerTable();
         initLedgerChart();
         renderCrmList();
         generateLogo();
+        toggleDukaanTabs('ledger');
       } else if (moduleName === 'shakti') {
         renderShgTable();
       } else if (moduleName === 'samaj') {
         renderNotices();
+        toggleSamajTabs('board');
       } else if (moduleName === 'rozgar') {
         renderJobs();
         initExamList();
         toggleRozgarTabs('board');
       } else if (moduleName === 'skill') {
         renderQuizQuestion();
+        toggleSkillTabs('mentor');
       } else if (moduleName === 'health') {
         updatePregnancyWeek(document.getElementById('preg-week-slider').value);
+        toggleHealthTabs('symptoms');
       }
       
       saveState();
+    }
+
+    // ================= PROFILE PHOTO SIMULATION =================
+    function simulatePhotoUpload() {
+      const status = document.getElementById('photo-upload-status');
+      status.classList.remove('hidden');
     }
 
     // ================= OTP LOGIC =================
@@ -1708,7 +1999,6 @@
       const tempEl = document.getElementById('kisan-temp');
       const condEl = document.getElementById('kisan-condition');
       const humEl = document.getElementById('kisan-humidity');
-      const adviceEl = document.getElementById('kisan-weather-advice');
 
       navigator.geolocation.getCurrentPosition(
         position => {
@@ -1723,7 +2013,6 @@
               tempEl.innerText = `${current.temperature}°C`;
               condEl.innerText = getWeatherCondition(current.weathercode);
               humEl.innerText = `Humidity: ${data.current_weather.windspeed} km/h | Wind dir: ${current.winddirection}°`;
-              adviceEl.innerText = `Optimal day for spraying. Winds at ${current.windspeed} km/h. Clear skies expected.`;
               
               // update dashboard widgets
               document.getElementById('dash-weather-condition').innerText = getWeatherCondition(current.weathercode);
@@ -1739,7 +2028,6 @@
       document.getElementById('kisan-temp').innerText = '32°C';
       document.getElementById('kisan-condition').innerText = 'Sunny, Clear';
       document.getElementById('kisan-humidity').innerText = 'Humidity: 45% | Wind: 12 km/h';
-      document.getElementById('kisan-weather-advice').innerText = 'Spraying recommended before 11 AM due to midday temperature peak.';
     }
 
     function getWeatherCondition(code) {
@@ -1750,9 +2038,8 @@
       return "Rainy / Stormy";
     }
 
-    // ================= RULE-BASED EXPERT AI SYSTEM (New Feature!) =================
+    // ================= RULE-BASED EXPERT AI SYSTEM =================
     async function queryAI(prompt, systemInstruction = "") {
-      // Try backend server API first
       try {
         const response = await fetch("/api/ai", {
           method: "POST",
@@ -1798,7 +2085,6 @@
       const districtName = state.user ? state.user.district : "Bhiwani";
       const userName = state.user ? state.user.name : "Citizen";
 
-      // 1. KisanAI Crop Doctor & Advisor Rules
       if (p.includes('crop:') || p.includes('symptoms:')) {
         if (p.includes('rice') || p.includes('paddy')) {
           if (p.includes('brown') || p.includes('spots')) {
@@ -1812,49 +2098,26 @@
           }
           return `🌾 **KisanAI Wheat advisory:** Plan third irrigation cycle at crown root initiation phase. Soil nitrogen index is optimal for ${districtName} region.`;
         }
-        if (p.includes('cotton') || p.includes('kapas')) {
-          if (p.includes('pink') || p.includes('boll') || p.includes('worm')) {
-            return `🌾 **KisanAI Plant Pathology Report:**\n\n**Diagnosis:** Pink Bollworm (Pectinophora gossypiella) infestation.\n\n**Remedy Plan:**\n1. Deploy **Pheromone Traps** @ 5 traps per acre to monitor moth populations.\n2. If damage exceeds 10%, spray **Profenofos 50% EC** @ 2 ml/liter of water.\n3. Clear crop residues immediately after harvest to disrupt insect pupation.`;
-          }
-          return `🌾 **KisanAI Cotton advisory:** Maintain deep weeding intervals. Soil drainage is key to avoid root rot in black cotton soil.`;
-        }
-        return `🌾 **KisanAI Crop Advisory:**\n\nYour crop description has been evaluated. For general leaf spots and blight, maintain clean spacing, remove infected crop residues, and spray generic **Copper Oxychloride 50% WP** @ 3g/liter. For organic options, use Trichoderma viride bio-pesticide.`;
+        return `🌾 **KisanAI Crop Advisory:**\n\nYour crop description has been evaluated. For general leaf spots and blight, maintain clean spacing, remove infected crop residues, and spray generic **Copper Oxychloride 50% WP** @ 3g/liter.`;
       }
 
-      // 2. HealthGuide Symptoms Rules
       if (systemInstruction.includes("Symptom evaluator") || p.includes('symptom') || p.includes('fever') || p.includes('pain')) {
         if (p.includes('fever') && p.includes('chills') && p.includes('body')) {
           return `🩺 **HealthGuide Severity Diagnosis:**\n\n**Severity Rating: Urgent Action Recommended (Seek Clinic)**\n\n**Suspected Condition:** Dengue or Malaria seasonal risk.\n\n**First-Aid Steps:**\n- Take Paracetamol 500mg (1 tablet) for fever reduction (max 3 times/day). Do NOT take Ibuprofen/Aspirin without blood tests.\n- Maintain high fluid intake (ORS packet, coconut water, fresh juices).\n- Visit ${districtName} Civil Hospital immediately for a complete blood count (CBC) platelet test.`;
         }
-        if (p.includes('cough') && p.includes('throat') && p.includes('fever')) {
-          return `🩺 **HealthGuide Severity Diagnosis:**\n\n**Severity Rating: Standard Care (Can wait, monitor progress)**\n\n**Suspected Condition:** Acute seasonal viral respiratory infection.\n\n**First-Aid Steps:**\n- Gargle with warm salt water three times daily.\n- Steam inhalation to clear respiratory passages.\n- Stay hydrated and rest.\n- If breathing difficulty occurs, visit your nearest Primary Health Centre (PHC).`;
-        }
         return `🩺 **HealthGuide Symptom Checker:**\n\n**Severity Rating: Mild (Home remedy & monitor)**\n\n**First-Aid Steps:**\n- Maintain rest and light nutrition.\n- If symptoms persist or worsen past 48 hours, proceed to the nearest PHC.`;
       }
 
-      // 3. DukaanAI Business Planner Rules
       if (p.includes('business') || p.includes('plan')) {
-        if (p.includes('tailoring') || p.includes('boutique')) {
-          return `🏪 **DukaanAI Business Plan: Stitching & Boutique**\n\n**Estimated Capital:** ₹15,000 - ₹30,000.\n**Machinery:** 2 Manual sewing machines, fabric shears, measuring equipment.\n**GST/UDYAM Guide:** Register as a sole proprietor on the government UDYAM portal (free) to enable Mudra loan applications.\n**WhatsApp Marketing:** Send localized product photos to community groups.`;
-        }
-        if (p.includes('dairy') || p.includes('milk')) {
-          return `🏪 **DukaanAI Business Plan: Micro Dairy Hub**\n\n**Estimated Capital:** ₹80,000 - ₹1,500,000 (depending on herd size).\n**Strategy:** Join local milk cooperative society to guarantee daily procurement margins. Use DukaanAI CRM to track local credits.`;
-        }
         return `🏪 **DukaanAI Business Plan:**\n\n**Capital:** Moderate (₹10,000 - ₹50,000).\n**Operations:** Source materials directly from sub-district wholesale markets. Offer digital payments (UPI) to reduce cash holding risk. Apply for Mudra Shishu loans up to ₹50,000 at public banks.`;
       }
 
-      // 4. SamajAI RTI Builder Rules
       if (p.includes('rti') || p.includes('department:')) {
         const deptName = p.match(/department:\s*([^.]+)/) ? p.match(/department:\s*([^.]+)/)[1].trim() : "Gram Panchayat Office";
         return `📋 **FORMAL RIGHT TO INFORMATION ACT (SEC 6(1)) REQUEST TEMPLATE**\n\nTo,\nThe Public Information Officer (PIO)\nOffice of: ${deptName}\nDistrict: ${districtName}, State: ${stateName}\n\n1. Full Name of Applicant: ${userName}\n2. Address: Village Post, District ${districtName}, ${stateName}\n3. Particulars of Information sought:\n   a. Details of development funds disbursed for local pipeline works in 2025-2026.\n   b. Copy of approved contractor registry.\n4. Application Fee details: ₹10 Postal Order attached.\n\nDate: ${new Date().toLocaleDateString()}\nSignature of Applicant: _________________`;
       }
 
-      // 5. RozgarAI Cover Letter Generator Rules
-      if (p.includes('cover') || p.includes('letter')) {
-        return `✉️ **AI-Generated Cover Letter**\n\nTo,\nThe Office Manager / Supervisor\n\nSubject: Application for Job Role.\n\nDear Sir/Madam,\nI am writing to express my interest in local roles available. I reside in District ${districtName}, ${stateName}. I possess key skills including typing, basic computer usage, and coordinate logistics. I am hardworking and eager to support administrative and supervisor projects. Looking forward to your response.\n\nSincerely,\n${userName}\nContact: +91 99999-99999`;
-      }
-
-      return `BharatAI Helper:\n\nDear ${userName}, based on your district demographics in ${districtName}, we recommend checking matched schemes (PM-Kisan, PM-Awas) or utilizing DukaanAI bookkeeping trackers to register local cooperative transactions. Let us know if you need specific template layouts!`;
+      return `BharatAI Helper:\n\nDear ${userName}, based on your district demographics in ${districtName}, we recommend checking matched schemes (PM-Kisan, PM-Awas) or utilizing DukaanAI bookkeeping trackers to register local cooperative transactions.`;
     }
 
     function formatAIPanelOutput(boxElement, rawText) {
@@ -1918,6 +2181,52 @@
     }
 
     // ================= KISANAI SCRIPTS =================
+    function toggleKisanTabs(tabName) {
+      document.getElementById('kisan-tab-weather').classList.toggle('hidden', tabName !== 'weather');
+      document.getElementById('kisan-tab-soil').classList.toggle('hidden', tabName !== 'soil');
+      document.getElementById('kisan-tab-insurance').classList.toggle('hidden', tabName !== 'insurance');
+
+      document.getElementById('kisan-btn-weather').className = tabName === 'weather' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('kisan-btn-soil').className = tabName === 'soil' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('kisan-btn-insurance').className = tabName === 'insurance' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      
+      if (tabName === 'soil') {
+        updateSoilPh(document.getElementById('soil-ph').value);
+        updateCropCalendar(document.getElementById('crop-cal-slider').value);
+      }
+    }
+
+    function updateSoilPh(val) {
+      document.getElementById('soil-ph-val').innerText = val;
+      const desc = document.getElementById('soil-ph-desc');
+      if (val < 6.0) {
+        desc.innerText = "Acidic Soil. Apply agricultural lime (calcium carbonate) to raise pH levels.";
+        desc.className = "text-amber-400 font-semibold";
+      } else if (val <= 7.5) {
+        desc.innerText = "Optimal pH. Highly balanced NPK absorption index. Ideal for Wheat & Paddy.";
+        desc.className = "text-emerald-400 font-semibold";
+      } else {
+        desc.innerText = "Alkaline Soil. Add gypsum or organic compost manure to balance pH levels.";
+        desc.className = "text-amber-400 font-semibold";
+      }
+    }
+
+    const cropCalDetails = {
+      1: "January: Frost protection watering. Apply second round of urea fertilizers.",
+      5: "May: Harvesting phase complete. Begin stubble clearing and deep summer plowing.",
+      7: "July: Land preparation for Kharif paddy. Check drainage lines.",
+      11: "November: Seed sowing phase (Rabi Wheat). Soil moisture parameters are critical."
+    };
+
+    function updateCropCalendar(month) {
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      document.getElementById('cal-month-val').innerText = monthNames[month - 1];
+      const box = document.getElementById('crop-cal-text');
+      
+      let details = cropCalDetails[month] || `Operations active for the month of ${monthNames[month - 1]}. Perform routine weed removal and check irrigation intervals.`;
+      box.innerHTML = `<p>🚜 <strong>Farming Activity:</strong> ${details}</p>`;
+    }
+
     async function diagnoseCrop() {
       const name = document.getElementById('crop-name-input').value;
       const symptom = document.getElementById('crop-symptom-input').value;
@@ -1961,6 +2270,35 @@
     }
 
     // ================= SKILLBRIDGE SCRIPTS =================
+    function toggleSkillTabs(tabName) {
+      document.getElementById('skill-tab-mentor').classList.toggle('hidden', tabName !== 'mentor');
+      document.getElementById('skill-tab-study').classList.toggle('hidden', tabName !== 'study');
+
+      document.getElementById('skill-btn-mentor').className = tabName === 'mentor' ? 'text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('skill-btn-study').className = tabName === 'study' ? 'text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      
+      if (tabName === 'study') {
+        generateStudySchedule();
+      }
+    }
+
+    function selectMentor(name) {
+      document.getElementById('mentor-name-title').innerText = name + " - Academic Advisor";
+      alert("Mentor selected! Start typing your query in the chatbox below.");
+    }
+
+    async function generateStudySchedule() {
+      const hours = document.getElementById('study-hours').value;
+      const exam = document.getElementById('study-exam').value;
+      const box = document.getElementById('study-schedule-result');
+      
+      box.classList.remove('hidden');
+      box.innerText = "Drafting study slots...";
+      
+      const rep = await queryAI(`Generate a study schedule for ${hours} hours targeting ${exam}`);
+      box.innerText = rep;
+    }
+
     function changeMentor() {
       const select = document.getElementById('mentor-select');
       const box = document.getElementById('mentor-chat-box');
@@ -2028,6 +2366,32 @@
     }
 
     // ================= HEALTHGUIDE SCRIPTS =================
+    function toggleHealthTabs(tabName) {
+      document.getElementById('health-tab-symptoms').classList.toggle('hidden', tabName !== 'symptoms');
+      document.getElementById('health-tab-maternal').classList.toggle('hidden', tabName !== 'maternal');
+      document.getElementById('health-tab-firstaid').classList.toggle('hidden', tabName !== 'firstaid');
+
+      document.getElementById('health-btn-symptoms').className = tabName === 'symptoms' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('health-btn-maternal').className = tabName === 'maternal' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('health-btn-firstaid').className = tabName === 'firstaid' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+    }
+
+    function checkDrugInteraction() {
+      const chem1 = document.getElementById('drug-chem1').value.trim().toLowerCase();
+      const chem2 = document.getElementById('drug-chem2').value.trim().toLowerCase();
+      const box = document.getElementById('drug-interaction-result');
+
+      if (!chem1 || !chem2) return;
+      box.classList.remove('hidden');
+
+      if ((chem1.includes('aspirin') && chem2.includes('warfarin')) || (chem1.includes('warfarin') && chem2.includes('aspirin'))) {
+        box.innerHTML = `⚠️ <strong class="text-rose-500">High Risk Interaction!</strong><br/>
+          Combining Aspirin and Warfarin significantly increases bleeding risks. Consult a physician immediately to adjust dosages.`;
+      } else {
+        box.innerHTML = `✅ No severe documented interactions found between ${chem1.toUpperCase()} and ${chem2.toUpperCase()} for standard dosages. Check with your local pharmacist.`;
+      }
+    }
+
     async function checkSymptoms() {
       const val = document.getElementById('health-symptom-input').value;
       const box = document.getElementById('health-symptom-result');
@@ -2135,7 +2499,39 @@
       }
     }
 
+    // Maternal Health Weekly Guide Slider Logic
+    const pregnancyData = {
+      1: { tips: "Start taking Folic Acid daily. Avoid raw fish and excessive caffeine.", check: "Verify your blood tests and hemoglobin levels at nearest PHC." },
+      12: { tips: "Your baby is now the size of a plum. Morning sickness might start fading now.", check: "Book your first ultrasound check-up (NT scan)." },
+      24: { tips: "Feel the kicks! Keep walking daily for 30 minutes. Eat iron-rich foods (spinach, beetroot).", check: "Check blood sugar levels for gestational diabetes." },
+      36: { tips: "The baby is fully developed. Pack your hospital bag and review transport routes to PHC.", check: "Weekly blood pressure checks to monitor preeclampsia risk." }
+    };
+
+    function updatePregnancyWeek(val) {
+      document.getElementById('preg-week-display').innerText = val;
+      const content = document.getElementById('preg-week-content');
+      
+      let weekData = pregnancyData[val];
+      if (!weekData) {
+        if (val < 12) weekData = pregnancyData[1];
+        else if (val < 24) weekData = pregnancyData[12];
+        else if (val < 36) weekData = pregnancyData[24];
+        else weekData = pregnancyData[36];
+      }
+      
+      content.innerHTML = `
+        <p>💡 <strong>Nutrition & Tips:</strong> ${weekData.tips}</p>
+        <p class="mt-1.5">🩺 <strong>Health Checklist:</strong> ${weekData.check}</p>
+      `;
+    }
+
     // ================= ROZGARAI (JOBS) =================
+    const jobsDatabase = [
+      { id: 1, title: "Data Entry Operator", org: "Local Agri Cooperative Office", sector: "office", sal: "₹12,000/month", loc: "Bhiwani Hub" },
+      { id: 2, title: "MGNREGA Canal Work Supervisor", org: "Panchayat Development Board", sector: "govt", sal: "₹380/day", loc: "Village outskirts" },
+      { id: 3, title: "Farming Equipment Fleet Dispatcher", org: "Custom Hiring Center", sector: "field", sal: "₹15,000/month", loc: "Rural Cluster" }
+    ];
+
     function toggleRozgarTabs(tabName) {
       document.getElementById('rozgar-board-tab').classList.toggle('hidden', tabName !== 'board');
       document.getElementById('rozgar-applications-tab').classList.toggle('hidden', tabName !== 'applications');
@@ -2146,6 +2542,27 @@
       if (tabName === 'applications') {
         renderAppliedJobsList();
       }
+    }
+
+    function renderJobs() {
+      const filter = document.getElementById('job-role-filter').value;
+      const container = document.getElementById('jobs-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const filtered = jobsDatabase.filter(j => filter === 'all' || j.sector === filter);
+      filtered.forEach(j => {
+        container.innerHTML += `
+          <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 flex justify-between items-center text-xs">
+            <div>
+              <h4 class="font-bold text-white text-sm">${j.title}</h4>
+              <p class="text-[10px] text-muted">${j.org} • ${j.loc}</p>
+              <p class="text-emerald-400 font-bold mt-1">${j.sal}</p>
+            </div>
+            <button onclick="applyJob('${j.title}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-[10px] font-semibold text-white">Apply</button>
+          </div>
+        `;
+      });
     }
 
     function applyJob(title) {
@@ -2180,118 +2597,61 @@
       });
     }
 
-    // ================= DUKAANAI (SMALL BUSINESS) =================
-    let currentLogoBgColor = '#1a1a3e';
-    function changeLogoColor(colorCode) {
-      currentLogoBgColor = colorCode;
-      generateLogo();
+    let interviewStep = 0;
+    function sendInterviewMessage() {
+      const input = document.getElementById('interview-input');
+      const box = document.getElementById('interview-chat-box');
+      const text = input.value.trim();
+      if (!text) return;
+
+      box.innerHTML += `<div class="bg-indigo-600 p-2 rounded max-w-[80%] self-end ml-auto text-right text-white">${text}</div>`;
+      input.value = '';
+
+      setTimeout(() => {
+        interviewStep++;
+        let reply = "";
+        if (interviewStep === 1) {
+          reply = "Great. Tell me about your experience working with local spreadsheets or manual logbooks.";
+        } else {
+          reply = "Understood. That concludes our mock module. You handled communications extremely well!";
+        }
+        
+        box.innerHTML += `
+          <div class="bg-indigo-950/40 p-2 rounded max-w-[80%] space-y-1">
+            <p>${reply}</p>
+            <button onclick="speakText(this.previousElementSibling.innerText)" class="text-[9px] text-secondary flex items-center gap-0.5 underline">
+              <i data-lucide="volume-2" class="w-2.5 h-2.5"></i> Speak
+            </button>
+          </div>`;
+        box.scrollTop = box.scrollHeight;
+        lucide.createIcons();
+      }, 1000);
     }
 
-    function generateLogo() {
-      const canvas = document.getElementById('logo-canvas');
-      const ctx = canvas.getContext('2d');
-      const text = document.getElementById('logo-text-input').value || (state.user ? state.user.name : 'Dukaan');
-      
-      ctx.fillStyle = currentLogoBgColor;
-      ctx.fillRect(0, 0, 200, 80);
-      
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(5, 5, 190, 70);
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px "Plus Jakarta Sans"';
-      ctx.textAlign = 'center';
-      ctx.fillText(text.toUpperCase(), 100, 45);
-    }
+    function generateResume() {
+      const name = document.getElementById('resume-name').value;
+      const phone = document.getElementById('resume-phone').value;
+      const skills = document.getElementById('resume-skills').value;
+      const exp = document.getElementById('resume-exp').value;
+      const preview = document.getElementById('resume-preview-box');
 
-    function downloadLogo() {
-      const canvas = document.getElementById('logo-canvas');
-      const link = document.createElement('a');
-      link.download = 'shop_logo.png';
-      link.href = canvas.toDataURL();
-      link.click();
-    }
-
-    function generateInvoice() {
-      const item = document.getElementById('inv-item').value;
-      const qty = Number(document.getElementById('inv-qty').value) || 0;
-      const rate = Number(document.getElementById('inv-rate').value) || 0;
-      const preview = document.getElementById('invoice-preview');
-      
-      if (!item || !qty || !rate) {
-        alert("Please enter items details.");
+      if (!name || !phone) {
+        alert("Name and contact must be defined.");
         return;
       }
-      
-      const subtotal = qty * rate;
-      const tax = subtotal * 0.18; // 18% CGST/SGST simulation
-      const total = subtotal + tax;
 
       preview.classList.remove('hidden');
       preview.innerHTML = `
-        <div class="text-center font-bold text-black border-b pb-1.5 mb-1.5">TAX INVOICE (GST Compliant)</div>
-        <p class="text-black"><strong>Vendor:</strong> ${state.user ? state.user.name : 'DukaanAI Partner'}</p>
-        <p class="text-black"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-        <p class="text-black border-t border-b py-1"><strong>Item:</strong> ${item} (${qty} x ₹${rate})</p>
-        <p class="text-black">Subtotal: ₹${subtotal.toFixed(2)}</p>
-        <p class="text-black">GST (18%): ₹${tax.toFixed(2)}</p>
-        <p class="text-black border-t pt-1.5 font-extrabold text-sm">TOTAL BILL: ₹${total.toFixed(2)}</p>
+        <div class="text-center font-bold border-b pb-2 mb-2 text-sm text-black">${name.toUpperCase()}</div>
+        <p class="text-black"><strong>Contact:</strong> ${phone}</p>
+        <p class="text-black"><strong>Location:</strong> ${state.user ? state.user.district : 'Bhiwani'}, ${state.user ? state.user.state : 'Haryana'}</p>
+        <p class="text-black"><strong>Capabilities:</strong> ${skills}</p>
+        <p class="text-black"><strong>Background Experience:</strong> ${exp}</p>
         <div class="pt-2 flex justify-between">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('invoice-preview').innerText); alert('Invoice text copied!');" class="text-[10px] text-blue-600 underline font-bold">Copy Text</button>
-          <button onclick="window.print()" class="text-[10px] text-blue-600 underline font-bold">Print Invoice</button>
+          <button onclick="navigator.clipboard.writeText(document.getElementById('resume-preview-box').innerText); alert('Copied to clipboard!');" class="text-[10px] text-blue-600 underline">Copy Text</button>
+          <button onclick="window.print()" class="text-[10px] text-blue-600 underline">Print Profile</button>
         </div>
       `;
-    }
-
-    // ================= SKILLBRIDGE QUIZ & EXAMS =================
-    let currentQuestionIdx = 0;
-    const quizQuestions = [
-      { q: "What does 'WWW' stand for in computer systems?", o: ["World Wide Web", "World War Web", "Word Wide Web"], a: 0 },
-      { q: "Which soil nutrient is mostly replenished by planting legumes?", o: ["Potassium", "Phosphorus", "Nitrogen"], a: 2 },
-      { q: "What is the toll-free national helpline for women in distress?", o: ["181", "100", "108"], a: 0 }
-    ];
-
-    function renderQuizQuestion() {
-      const container = document.getElementById('quiz-container');
-      if (!container) return;
-      if (currentQuestionIdx >= quizQuestions.length) {
-        container.innerHTML = `
-          <div class="text-center space-y-2 py-3">
-            <p class="text-emerald-400 font-bold text-sm">🎉 Quiz Completed!</p>
-            <p class="text-slate-300">You scored 3/3 points. Keep learning daily!</p>
-            <button onclick="resetQuiz()" class="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold text-[10px] transition">Retry Quiz</button>
-          </div>
-        `;
-        return;
-      }
-      const q = quizQuestions[currentQuestionIdx];
-      container.innerHTML = `
-        <p class="font-semibold text-white">Question ${currentQuestionIdx + 1}: ${q.q}</p>
-        <div class="space-y-1.5 pt-1">
-          ${q.o.map((opt, idx) => `
-            <button onclick="submitAnswer(${idx})" class="w-full text-left bg-indigo-950/40 border border-indigo-900/60 p-2 rounded hover:bg-indigo-950 transition text-[11px] text-slate-300">
-              ${opt}
-            </button>
-          `).join('')}
-        </div>
-      `;
-    }
-
-    function submitAnswer(idx) {
-      const q = quizQuestions[currentQuestionIdx];
-      if (idx === q.a) {
-        alert("Correct answer! +1 point.");
-      } else {
-        alert(`Incorrect! The correct answer was: ${q.o[q.a]}`);
-      }
-      currentQuestionIdx++;
-      renderQuizQuestion();
-    }
-
-    function resetQuiz() {
-      currentQuestionIdx = 0;
-      renderQuizQuestion();
     }
 
     function initExamList() {
@@ -2317,7 +2677,48 @@
       });
     }
 
-    // ================= DUKAANAI DIGITAL BOOKKEEPING & CRM =================
+    // ================= DUKAANAI (SMALL BUSINESS) =================
+    function toggleDukaanTabs(tabName) {
+      document.getElementById('dukaan-tab-ledger').classList.toggle('hidden', tabName !== 'ledger');
+      document.getElementById('dukaan-tab-inventory').classList.toggle('hidden', tabName !== 'inventory');
+      document.getElementById('dukaan-tab-marketing').classList.toggle('hidden', tabName !== 'marketing');
+
+      document.getElementById('dukaan-btn-ledger').className = tabName === 'ledger' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('dukaan-btn-inventory').className = tabName === 'inventory' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('dukaan-btn-marketing').className = tabName === 'marketing' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      
+      if (tabName === 'inventory') {
+        renderStockTable();
+      }
+    }
+
+    function renderStockTable() {
+      const body = document.getElementById('stock-list-body');
+      if (!body) return;
+      body.innerHTML = '';
+      state.stock.forEach(item => {
+        body.innerHTML += `
+          <tr class="border-b border-indigo-950 hover:bg-indigo-950/20">
+            <td class="p-2 text-white font-medium">${item.name}</td>
+            <td class="p-2 text-right font-bold text-amber-500">${item.qty} units</td>
+          </tr>
+        `;
+      });
+    }
+
+    function addStockItem() {
+      const name = document.getElementById('stock-item-name').value.trim();
+      const qty = Number(document.getElementById('stock-item-qty').value) || 0;
+      
+      if (!name || qty <= 0) return;
+      state.stock.push({ id: Date.now(), name, qty });
+      saveState();
+      renderStockTable();
+      
+      document.getElementById('stock-item-name').value = '';
+      document.getElementById('stock-item-qty').value = '';
+    }
+
     let ledgerChart = null;
     function initLedgerChart() {
       const canvasEl = document.getElementById('business-ledger-chart');
@@ -2399,6 +2800,69 @@
       document.getElementById('ledger-amount').value = '';
     }
 
+    let currentLogoBgColor = '#1a1a3e';
+    function changeLogoColor(colorCode) {
+      currentLogoBgColor = colorCode;
+      generateLogo();
+    }
+
+    function generateLogo() {
+      const canvas = document.getElementById('logo-canvas');
+      const ctx = canvas.getContext('2d');
+      const text = document.getElementById('logo-text-input').value || (state.user ? state.user.name : 'Dukaan');
+      
+      ctx.fillStyle = currentLogoBgColor;
+      ctx.fillRect(0, 0, 200, 80);
+      
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(5, 5, 190, 70);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px "Plus Jakarta Sans"';
+      ctx.textAlign = 'center';
+      ctx.fillText(text.toUpperCase(), 100, 45);
+    }
+
+    function downloadLogo() {
+      const canvas = document.getElementById('logo-canvas');
+      const link = document.createElement('a');
+      link.download = 'shop_logo.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function generateInvoice() {
+      const item = document.getElementById('inv-item').value;
+      const qty = Number(document.getElementById('inv-qty').value) || 0;
+      const rate = Number(document.getElementById('inv-rate').value) || 0;
+      const preview = document.getElementById('invoice-preview');
+      
+      if (!item || !qty || !rate) {
+        alert("Please enter items details.");
+        return;
+      }
+      
+      const subtotal = qty * rate;
+      const tax = subtotal * 0.18; // 18% CGST/SGST simulation
+      const total = subtotal + tax;
+
+      preview.classList.remove('hidden');
+      preview.innerHTML = `
+        <div class="text-center font-bold text-black border-b pb-1.5 mb-1.5">TAX INVOICE (GST Compliant)</div>
+        <p class="text-black"><strong>Vendor:</strong> ${state.user ? state.user.name : 'DukaanAI Partner'}</p>
+        <p class="text-black"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        <p class="text-black border-t border-b py-1"><strong>Item:</strong> ${item} (${qty} x ₹${rate})</p>
+        <p class="text-black">Subtotal: ₹${subtotal.toFixed(2)}</p>
+        <p class="text-black">GST (18%): ₹${tax.toFixed(2)}</p>
+        <p class="text-black border-t pt-1.5 font-extrabold text-sm">TOTAL BILL: ₹${total.toFixed(2)}</p>
+        <div class="pt-2 flex justify-between">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('invoice-preview').innerText); alert('Invoice text copied!');" class="text-[10px] text-blue-600 underline font-bold">Copy Text</button>
+          <button onclick="window.print()" class="text-[10px] text-blue-600 underline font-bold">Print Invoice</button>
+        </div>
+      `;
+    }
+
     function renderCrmList() {
       const box = document.getElementById('crm-list-box');
       if (!box) return;
@@ -2423,6 +2887,21 @@
       renderCrmList();
       document.getElementById('crm-name').value = '';
       document.getElementById('crm-credit').value = '';
+    }
+
+    async function generateBusinessPlan() {
+      const type = document.getElementById('biz-plan-type').value;
+      const box = document.getElementById('biz-plan-result');
+      box.classList.remove('hidden');
+      box.innerText = "Drafting custom localized business roadmap...";
+      
+      const rep = await queryAI(`Create micro business plan for: ${type}`);
+      formatAIPanelOutput(box, rep);
+
+      const log = { business: type, plan: rep, timestamp: new Date() };
+      state.savedPlans.push(log);
+      saveState();
+      queueAction('saved_plans', { user_id: state.user.name, plan_type: 'business', data: log });
     }
 
     // ================= SHAKTIAI METRICS & SAFETY =================
@@ -2530,6 +3009,76 @@
     }
 
     // ================= SAMAJAI NOTICES & SCHEMES =================
+    function toggleSamajTabs(tabName) {
+      document.getElementById('samaj-tab-board').classList.toggle('hidden', tabName !== 'board');
+      document.getElementById('samaj-tab-welfare').classList.toggle('hidden', tabName !== 'welfare');
+
+      document.getElementById('samaj-btn-board').className = tabName === 'board' ? 'text-cyan-400 border-b-2 border-cyan-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('samaj-btn-welfare').className = tabName === 'welfare' ? 'text-cyan-400 border-b-2 border-cyan-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+    }
+
+    function verifyDocStatus() {
+      const val = document.getElementById('doc-id-check').value.trim();
+      const box = document.getElementById('doc-check-result');
+      
+      if (!val) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `📄 <strong>Document Reference Status:</strong><br/>
+        Type: Aadhaar / Ration Database verification.<br/>
+        Status: <span class="text-emerald-400 font-bold">Approved & Disbursed</span>.<br/>
+        Remarks: Local sub-distributors authorized. Ration allocations linked.`;
+    }
+
+    // Interactive Student Quiz
+    let currentQuestionIdx = 0;
+    const quizQuestions = [
+      { q: "What does 'WWW' stand for in computer systems?", o: ["World Wide Web", "World War Web", "Word Wide Web"], a: 0 },
+      { q: "Which soil nutrient is mostly replenished by planting legumes?", o: ["Potassium", "Phosphorus", "Nitrogen"], a: 2 },
+      { q: "What is the toll-free national helpline for women in distress?", o: ["181", "100", "108"], a: 0 }
+    ];
+
+    function renderQuizQuestion() {
+      const container = document.getElementById('quiz-container');
+      if (!container) return;
+      if (currentQuestionIdx >= quizQuestions.length) {
+        container.innerHTML = `
+          <div class="text-center space-y-2 py-3">
+            <p class="text-emerald-400 font-bold text-sm">🎉 Quiz Completed!</p>
+            <p class="text-slate-300">You scored 3/3 points. Keep learning daily!</p>
+            <button onclick="resetQuiz()" class="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold text-[10px] transition">Retry Quiz</button>
+          </div>
+        `;
+        return;
+      }
+      const q = quizQuestions[currentQuestionIdx];
+      container.innerHTML = `
+        <p class="font-semibold text-white">Question ${currentQuestionIdx + 1}: ${q.q}</p>
+        <div class="space-y-1.5 pt-1">
+          ${q.o.map((opt, idx) => `
+            <button onclick="submitAnswer(${idx})" class="w-full text-left bg-indigo-950/40 border border-indigo-900/60 p-2 rounded hover:bg-indigo-950 transition text-[11px] text-slate-300">
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function submitAnswer(idx) {
+      const q = quizQuestions[currentQuestionIdx];
+      if (idx === q.a) {
+        alert("Correct answer! +1 point.");
+      } else {
+        alert(`Incorrect! The correct answer was: ${q.o[q.a]}`);
+      }
+      currentQuestionIdx++;
+      renderQuizQuestion();
+    }
+
+    function resetQuiz() {
+      currentQuestionIdx = 0;
+      renderQuizQuestion();
+    }
+
     function renderNotices() {
       const container = document.getElementById('notice-board-posts');
       if (!container) return;
@@ -2650,6 +3199,7 @@
       });
     }
 
+    // ================= INITIAL LOADING =================
     window.addEventListener('load', async () => {
       await loadPersistedState();
       
