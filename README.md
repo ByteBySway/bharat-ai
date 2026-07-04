@@ -4,7 +4,7 @@
 
 BharatAI is a single, premium web super-app tailored specifically to address the unique challenges faced by rural communities across India. It aggregates **7 distinct modular portals** under one responsive shell, featuring localized database systems, translation layers, offline queue synchronization, accessibility modes, and an **Expert AI Diagnostic System**.
 
-Live URL: **[BharatAI Web Portal on Vercel](https://bharat-l3benyj4c-swaybytes-projects.vercel.app)**
+Live URL: **[BharatAI Web Portal on Vercel](https://bharat-gt4olsh3g-swaybytes-projects.vercel.app)**
 
 ---
 
