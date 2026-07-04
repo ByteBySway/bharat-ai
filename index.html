@@ -1442,8 +1442,14 @@
     }
 
     // ================= CLIENT ROUTING =================
-    function navigateTo(moduleName) {
+    function navigateTo(moduleName, updateHash = true) {
       state.currentModule = moduleName;
+      
+      // Update browser URL hash to sync back/forward actions
+      if (updateHash) {
+        window.location.hash = moduleName;
+      }
+      
       document.querySelectorAll('.view-section').forEach(section => {
         section.classList.add('hidden');
       });
@@ -2657,7 +2663,18 @@
       document.getElementById('language-select').value = state.lang;
       
       applyTranslations();
-      navigateTo(state.currentModule);
+      
+      // Navigate to current hash or default to home
+      const initialHash = window.location.hash.substring(1) || 'home';
+      navigateTo(initialHash);
+
+      // Listen to browser Back/Forward navigation
+      window.addEventListener('hashchange', () => {
+        const currentHash = window.location.hash.substring(1) || 'home';
+        if (state.currentModule !== currentHash) {
+          navigateTo(currentHash, false);
+        }
+      });
 
       window.addEventListener('online', () => {
         updateNetworkStatus(true);
