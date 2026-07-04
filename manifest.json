@@ -1,0 +1,16 @@
+{
+  "short_name": "BharatAI",
+  "name": "BharatAI - Apna AI, Apna Haq",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5322/5322808.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#0f0f23",
+  "theme_color": "#0f0f23",
+  "display": "standalone",
+  "orientation": "portrait"
+}

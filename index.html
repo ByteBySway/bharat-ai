@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BharatAI — Apna AI, Apna Haq</title>
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0f0f23" />
   <!-- Tailwind CSS v3 CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Plus Jakarta Sans & Inter -->
@@ -17,6 +20,7 @@
 
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -70,6 +74,29 @@
     .active-nav {
       color: #6366f1;
     }
+    /* Theme Toggles */
+    .light-theme {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+    }
+    .light-theme .glass, 
+    .light-theme header, 
+    .light-theme nav, 
+    .light-theme div,
+    .light-theme section {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    .light-theme text,
+    .light-theme span,
+    .light-theme p,
+    .light-theme h1,
+    .light-theme h2,
+    .light-theme h3,
+    .light-theme h4 {
+      color: #0f172a !important;
+    }
     /* Accessibility Styles */
     .accessibility-large {
       font-size: 1.15rem;
@@ -77,9 +104,6 @@
     .accessibility-large h1 { font-size: 2.25rem; }
     .accessibility-large h2 { font-size: 1.75rem; }
     .accessibility-large h3 { font-size: 1.5rem; }
-    .accessibility-large p, .accessibility-large span, .accessibility-large button, .accessibility-large input, .accessibility-large select, .accessibility-large textarea {
-      font-size: 0.95rem;
-    }
     .accessibility-high-contrast {
       background-color: #000000 !important;
       color: #ffff00 !important;
@@ -91,7 +115,6 @@
       background-color: #000000 !important;
       color: #ffff00 !important;
       border-color: #ffff00 !important;
-      box-shadow: none !important;
     }
     .accessibility-high-contrast button, 
     .accessibility-high-contrast select, 
@@ -101,14 +124,17 @@
       color: #ffff00 !important;
       border: 2px solid #ffff00 !important;
     }
-    .accessibility-high-contrast text,
-    .accessibility-high-contrast span,
-    .accessibility-high-contrast p,
-    .accessibility-high-contrast h1,
-    .accessibility-high-contrast h2,
-    .accessibility-high-contrast h3,
-    .accessibility-high-contrast h4 {
-      color: #ffff00 !important;
+    /* Breathe Animation */
+    .breathe-circle {
+      width: 80px;
+      height: 80px;
+      background: rgba(99, 102, 241, 0.4);
+      border-radius: 50%;
+      animation: breathe 8s infinite ease-in-out;
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); background: rgba(99, 102, 241, 0.4); }
+      50% { transform: scale(1.8); background: rgba(16, 185, 129, 0.6); }
     }
   </style>
 </head>
@@ -163,9 +189,23 @@
             <label class="block text-slate-300 mb-1">Full Name</label>
             <input id="profile-name" type="text" placeholder="Your Name" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
           </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-300 mb-1">Age</label>
+              <input id="profile-age" type="number" placeholder="28" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+            </div>
+            <div>
+              <label class="block text-slate-300 mb-1">Gender</label>
+              <select id="profile-gender" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
           <div>
             <label class="block text-slate-300 mb-1">Profile Photo (Simulated Upload)</label>
-            <input type="file" accept="image/*" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white text-[10px]" onchange="simulatePhotoUpload()">
+            <input type="file" id="profile-photo-input" accept="image/*" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white text-[10px]" onchange="simulatePhotoUpload()">
             <p id="photo-upload-status" class="text-[9px] text-emerald-400 font-semibold mt-0.5 hidden">✓ Photo attached to profile</p>
           </div>
           <div>
@@ -178,7 +218,7 @@
               <option value="general">General Citizen</option>
             </select>
           </div>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-3 gap-2">
             <div>
               <label class="block text-slate-300 mb-1">State</label>
               <input id="profile-state" type="text" placeholder="Haryana" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
@@ -186,6 +226,10 @@
             <div>
               <label class="block text-slate-300 mb-1">District</label>
               <input id="profile-district" type="text" placeholder="Bhiwani" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+            </div>
+            <div>
+              <label class="block text-slate-300 mb-1">Village</label>
+              <input id="profile-village" type="text" placeholder="Tigrana" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
             </div>
           </div>
         </div>
@@ -209,6 +253,11 @@
     </div>
 
     <div class="flex items-center gap-3">
+      <!-- Theme Switcher -->
+      <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg border border-indigo-900 bg-indigo-950/50 flex items-center justify-center hover:bg-indigo-900 transition">
+        <i data-lucide="sun-moon" class="w-4 h-4 text-slate-300"></i>
+      </button>
+
       <!-- Language Dropdown -->
       <div class="relative">
         <select id="language-select" onchange="changeLanguage(this.value)" class="bg-indigo-950 border border-indigo-900 text-xs rounded-lg px-2.5 py-1.5 text-white font-semibold focus:outline-none">
@@ -235,16 +284,16 @@
         <button onclick="toggleAccessibilityMenu()" class="w-9 h-9 rounded-lg border border-indigo-900 bg-indigo-950/50 flex items-center justify-center hover:bg-indigo-900 transition">
           <i data-lucide="accessibility" class="w-4 h-4 text-slate-300"></i>
         </button>
-        <div id="accessibility-menu" class="hidden absolute right-0 mt-2 w-48 bg-surface border border-indigo-950 rounded-xl p-2.5 shadow-xl space-y-2 z-50 text-xs">
-          <button onclick="toggleHighContrast()" class="w-full text-left px-2 py-1.5 hover:bg-indigo-950 rounded text-slate-200 font-semibold flex items-center justify-between">
+        <div id="accessibility-menu" class="hidden absolute right-0 mt-2 w-48 bg-surface border border-indigo-950 rounded-xl p-2.5 shadow-xl space-y-2 z-50 text-xs text-white">
+          <button onclick="toggleHighContrast()" class="w-full text-left px-2 py-1.5 hover:bg-indigo-950 rounded font-semibold flex items-center justify-between">
             <span>High Contrast</span>
             <i data-lucide="eye" class="w-3.5 h-3.5 text-secondary"></i>
           </button>
-          <button onclick="toggleLargeText()" class="w-full text-left px-2 py-1.5 hover:bg-indigo-950 rounded text-slate-200 font-semibold flex items-center justify-between">
+          <button onclick="toggleLargeText()" class="w-full text-left px-2 py-1.5 hover:bg-indigo-950 rounded font-semibold flex items-center justify-between">
             <span>Large Font Mode</span>
             <i data-lucide="type" class="w-3.5 h-3.5 text-secondary"></i>
           </button>
-          <button onclick="toggleLowData()" class="w-full text-left px-2 py-1.5 hover:bg-indigo-950 rounded text-slate-200 font-semibold flex items-center justify-between">
+          <button onclick="toggleLowData()" class="w-full text-left px-2 py-1.5 hover:bg-indigo-950 rounded font-semibold flex items-center justify-between">
             <span>Low Data Mode</span>
             <i data-lucide="database" class="w-3.5 h-3.5 text-secondary"></i>
           </button>
@@ -264,9 +313,8 @@
     <!-- ================= HOME DASHBOARD ================= -->
     <section id="view-home" class="view-section space-y-6">
       <!-- Hero -->
-      <div class="rounded-2xl bg-gradient-to-r from-indigo-950 via-purple-950 to-slate-900 border border-indigo-500/20 p-6 md:p-8 relative overflow-hidden">
+      <div class="rounded-2xl bg-gradient-to-r from-indigo-950 via-purple-950 to-slate-900 border border-indigo-500/20 p-6 md:p-8 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6">
         <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -z-10"></div>
-        <div class="absolute bottom-0 left-12 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -z-10"></div>
         <div class="max-w-2xl space-y-4">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-400/20 text-xs font-medium">
             <i data-lucide="sparkles" class="w-3 h-3 text-secondary"></i>
@@ -291,11 +339,23 @@
             </button>
           </div>
         </div>
+
+        <!-- Simulated Photo Avatar & QR Card -->
+        <div class="glass p-4 rounded-2xl flex flex-col items-center space-y-3 w-48 text-center shrink-0 border border-indigo-500/25 shadow-xl">
+          <img id="user-avatar-thumbnail" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=60" alt="Avatar" class="w-16 h-16 rounded-full border-2 border-indigo-500 object-cover shadow">
+          <div>
+            <h4 class="font-bold text-white text-sm" id="user-avatar-name">Citizen</h4>
+            <p class="text-[10px] text-muted leading-tight" id="user-avatar-vill">Tigrana Village</p>
+          </div>
+          <canvas id="profile-qr" width="100" height="100" class="bg-white p-1 rounded"></canvas>
+          <button onclick="alert('Profile shared via WhatsApp template!')" class="text-[9px] text-indigo-400 font-bold flex items-center gap-1 hover:underline">
+            <i data-lucide="share-2" class="w-2.5 h-2.5"></i> Share QR Card
+          </button>
+        </div>
       </div>
 
       <!-- Stats & Quick Widgets Bar -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <!-- Mandi Price Widget -->
         <div class="glass rounded-xl p-4 flex items-center justify-between border-l-4 border-l-emerald-500">
           <div>
             <p class="text-[10px] text-muted uppercase font-bold">Today's Mandi Price</p>
@@ -303,7 +363,6 @@
           </div>
           <p class="text-xl font-extrabold text-emerald-400">₹2,450/q</p>
         </div>
-        <!-- Daily Weather Widget -->
         <div class="glass rounded-xl p-4 flex items-center justify-between border-l-4 border-l-indigo-500">
           <div>
             <p class="text-[10px] text-muted uppercase font-bold">District Weather</p>
@@ -311,7 +370,6 @@
           </div>
           <p class="text-xl font-extrabold text-white" id="dash-weather-temp">32°C</p>
         </div>
-        <!-- Streaks Widget -->
         <div class="glass rounded-xl p-4 flex items-center justify-between border-l-4 border-l-amber-500">
           <div>
             <p class="text-[10px] text-muted uppercase font-bold">Learning Streak</p>
@@ -322,7 +380,6 @@
             <span class="text-xl font-extrabold text-white" id="dash-streak">0 Days</span>
           </div>
         </div>
-        <!-- Active Role Widget -->
         <div class="glass rounded-xl p-4 flex items-center justify-between border-l-4 border-l-purple-500">
           <div>
             <p class="text-[10px] text-muted uppercase font-bold">Active User Role</p>
@@ -442,6 +499,7 @@
         <button onclick="toggleKisanTabs('weather')" id="kisan-btn-weather" class="text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none">Weather & Mandi</button>
         <button onclick="toggleKisanTabs('soil')" id="kisan-btn-soil" class="pb-1 focus:outline-none">Soil & Crops Calendar</button>
         <button onclick="toggleKisanTabs('insurance')" id="kisan-btn-insurance" class="pb-1 focus:outline-none">Insurance & KCC</button>
+        <button onclick="toggleKisanTabs('water')" id="kisan-btn-water" class="pb-1 focus:outline-none">Irrigation Scheduler</button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -458,9 +516,16 @@
                   <p id="kisan-condition" class="text-sm text-slate-300 font-medium">Fetching Climate...</p>
                   <p id="kisan-humidity" class="text-xs text-muted">Humidity: --% | Wind: -- km/h</p>
                 </div>
-                <div class="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 text-xs space-y-1.5">
-                  <p class="font-bold text-secondary flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> District Climate Alert</p>
-                  <p class="text-slate-200">Precipitation index is stable. Potential rainfall predicted next Wednesday in your sub-district.</p>
+                <!-- 5-Day Weather Forecast -->
+                <div class="bg-indigo-950/40 p-3 rounded-xl border border-indigo-900/30 text-xs">
+                  <p class="font-bold text-white mb-2">📅 5-Day District Forecast</p>
+                  <div class="flex justify-between text-center gap-1.5">
+                    <div><p class="text-muted">Mon</p><p class="font-bold">32°</p></div>
+                    <div><p class="text-muted">Tue</p><p class="font-bold">30°</p></div>
+                    <div><p class="text-muted">Wed</p><p class="font-bold text-emerald-400">28° 🌧</p></div>
+                    <div><p class="text-muted">Thu</p><p class="font-bold">31°</p></div>
+                    <div><p class="text-muted">Fri</p><p class="font-bold">33°</p></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -532,6 +597,24 @@
               </div>
             </div>
 
+            <!-- Intercropping and rotations -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Seed Varieties & Intercropping Matcher</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="space-y-2">
+                  <label class="block text-slate-300">Select Primary Crop</label>
+                  <select id="kisan-inter-select" onchange="matchIntercropping()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                    <option value="sugarcane">Sugarcane</option>
+                    <option value="wheat">Wheat</option>
+                    <option value="mustard">Mustard</option>
+                  </select>
+                </div>
+                <div id="kisan-intercropping-result" class="bg-indigo-950/30 p-3 rounded border border-indigo-900/60">
+                  <!-- Matcher output -->
+                </div>
+              </div>
+            </div>
+
             <!-- Crop Calendar Timeline -->
             <div class="glass rounded-xl p-5 space-y-4">
               <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Crop 12-Month Calendar Timeline</h3>
@@ -575,6 +658,29 @@
               </button>
             </div>
           </div>
+
+          <!-- Irrigation Scheduler Tab -->
+          <div id="kisan-tab-water" class="glass rounded-xl p-5 space-y-4 hidden">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Irrigation Water Scheduler</h3>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block text-slate-300 mb-1">Crop Type</label>
+                <select id="water-crop" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                  <option value="paddy">Paddy Rice</option>
+                  <option value="wheat">Wheat</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-1">Soil Dryness Level</label>
+                <select id="water-dryness" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1.5 text-white">
+                  <option value="high">Very Dry / Cracked</option>
+                  <option value="mild">Mildly Dry</option>
+                </select>
+              </div>
+            </div>
+            <button onclick="calculateIrrigation()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-xs font-bold rounded text-white">Calculate Irrigation Requirements</button>
+            <div id="irrigation-result" class="hidden bg-slate-900/60 p-3 rounded text-xs border border-indigo-900 text-slate-300"></div>
+          </div>
         </div>
 
         <!-- Diagnostic & Soil -->
@@ -602,6 +708,19 @@
               </button>
             </div>
             <div id="crop-diag-result" class="hidden bg-slate-900/80 p-3 rounded-lg border border-slate-800 text-xs space-y-2"></div>
+          </div>
+
+          <!-- PM Kisan & Govt Status tracker -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+              <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i> PM-Kisan Disbursal Status
+            </h3>
+            <p class="text-xs text-muted">Verify status of direct support deposits.</p>
+            <div class="flex gap-1.5">
+              <input id="pm-kisan-id" type="text" placeholder="Enter Registration No." class="flex-grow bg-indigo-950 border border-indigo-900 rounded px-2 py-1 text-xs text-white">
+              <button onclick="checkPmKisanStatus()" class="px-3 py-1 bg-indigo-600 rounded text-xs font-semibold text-white">Check</button>
+            </div>
+            <div id="pm-kisan-result" class="hidden bg-slate-900/60 p-3 rounded border border-indigo-950 text-xs text-slate-300"></div>
           </div>
 
           <div class="glass rounded-xl p-5 space-y-4">
@@ -632,6 +751,7 @@
       <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
         <button onclick="toggleSkillTabs('mentor')" id="skill-btn-mentor" class="text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none">Study Mentor</button>
         <button onclick="toggleSkillTabs('study')" id="skill-btn-study" class="pb-1 focus:outline-none">Study Planner & Countdown</button>
+        <button onclick="toggleSkillTabs('resources')" id="skill-btn-resources" class="pb-1 focus:outline-none">Resource Library</button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -640,7 +760,10 @@
           <div id="skill-tab-mentor" class="space-y-6">
             <!-- 6 Mentor Profiles Grid -->
             <div class="glass rounded-xl p-5 space-y-4">
-              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Seed Mentor Catalog</h3>
+              <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Seed Mentor Catalog</h3>
+                <button onclick="matchMentor()" class="text-xs text-indigo-400 font-bold hover:underline">Match Based on Goals</button>
+              </div>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div class="bg-indigo-950/40 p-3 rounded border border-indigo-900/50 text-xs space-y-1.5">
                   <h4 class="font-bold text-white">Dr. Anand Prasad</h4>
@@ -691,6 +814,18 @@
                 </button>
               </div>
             </div>
+
+            <!-- Mentor Session Scheduler -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Request Academic Advising Session</h3>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="date" id="mentor-session-date" class="bg-indigo-950 border border-indigo-900 p-2 rounded text-white">
+                <button onclick="scheduleMentorSession()" class="bg-blue-600 hover:bg-blue-500 rounded font-bold text-white">Request Slot</button>
+              </div>
+              <div id="mentor-scheduled-list" class="space-y-1.5 text-xs">
+                <!-- Session list items -->
+              </div>
+            </div>
           </div>
 
           <!-- Study Planner Tab -->
@@ -719,10 +854,57 @@
               <div id="study-schedule-result" class="hidden bg-slate-900/60 p-3 rounded text-xs border border-indigo-900 whitespace-pre-wrap"></div>
             </div>
           </div>
+
+          <!-- Resource Library Tab -->
+          <div id="skill-tab-resources" class="glass rounded-xl p-5 space-y-4 hidden">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Class 6-12 Resource Library</h3>
+            <div class="flex gap-2 text-xs">
+              <select id="res-class-filter" class="bg-indigo-950 border border-indigo-900 rounded px-2 py-1 text-white">
+                <option value="all">All Classes</option>
+                <option value="class10">Class 10 Matric</option>
+                <option value="class12">Class 12 Boards</option>
+              </select>
+              <button onclick="renderLibraryResources()" class="bg-indigo-600 px-3 py-1 rounded text-white font-bold">Search Resources</button>
+            </div>
+            <div id="library-resource-list" class="space-y-2 text-xs">
+              <!-- Filled via JS -->
+            </div>
+          </div>
         </div>
 
         <!-- Career Explorer, Streaks & Interactive Quiz -->
         <div class="space-y-6">
+          <!-- Doubt Solver Box -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+              <i data-lucide="help-circle" class="w-4 h-4 text-blue-400"></i> Doubt Solver Simulation
+            </h3>
+            <p class="text-xs text-muted">Upload an image of a math/science equation to generate step-by-step solutions.</p>
+            <div class="border-2 border-dashed border-indigo-900 rounded-lg p-4 text-center text-xs text-muted bg-indigo-950/15 relative">
+              <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto mb-2 text-muted"></i>
+              <p>Drag equation image here or click to upload</p>
+              <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="solveDoubtImage()">
+            </div>
+            <div id="doubt-solver-result" class="hidden bg-slate-900/60 p-2.5 rounded text-[11px] border border-indigo-900 text-slate-300"></div>
+          </div>
+
+          <!-- Goals Tracker Checklist -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+              <i data-lucide="target" class="w-4 h-4 text-emerald-400"></i> Active Learning Goals
+            </h3>
+            <div class="space-y-2 text-xs">
+              <label class="flex items-center gap-2 bg-indigo-950/20 p-2 rounded border border-indigo-900/40">
+                <input type="checkbox" checked class="w-4 h-4 accent-emerald-500">
+                <span>Complete 5 days streak cycle</span>
+              </label>
+              <label class="flex items-center gap-2 bg-indigo-950/20 p-2 rounded border border-indigo-900/40">
+                <input type="checkbox" class="w-4 h-4 accent-emerald-500">
+                <span>Submit 1 requested session to Anand</span>
+              </label>
+            </div>
+          </div>
+
           <!-- Quiz Assessment -->
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
@@ -788,6 +970,7 @@
         <button onclick="toggleHealthTabs('symptoms')" id="health-btn-symptoms" class="text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none">Symptoms & Meds</button>
         <button onclick="toggleHealthTabs('maternal')" id="health-btn-maternal" class="pb-1 focus:outline-none">Maternal & Child Health</button>
         <button onclick="toggleHealthTabs('firstaid')" id="health-btn-firstaid" class="pb-1 focus:outline-none">First-Aid & Snakes Manual</button>
+        <button onclick="toggleHealthTabs('mental')" id="health-btn-mental" class="pb-1 focus:outline-none">Mind & breathing</button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -888,10 +1071,38 @@
               </div>
             </div>
           </div>
+
+          <!-- Mind & Breathing Exercises Tab -->
+          <div id="health-tab-mental" class="glass rounded-xl p-5 space-y-4 hidden flex flex-col items-center">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">4-7-8 Deep Breathing Meditation Circle</h3>
+            <p class="text-xs text-muted text-center max-w-sm">Inhale as the circle expands, hold while it stays large, and exhale as it contracts.</p>
+            <div class="flex items-center justify-center h-48">
+              <div class="breathe-circle"></div>
+            </div>
+          </div>
         </div>
 
         <!-- Medicine Database & Child Vaccination -->
         <div class="space-y-6">
+          <!-- Healthcare Directory Directory -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Healthcare Access Directory</h3>
+            <div class="space-y-1.5 text-xs">
+              <div class="bg-indigo-950/30 p-2 rounded border border-indigo-900/40 flex justify-between">
+                <span>Jan Aushadhi Store Locator</span>
+                <span class="text-emerald-400 font-bold">1.2 km away</span>
+              </div>
+              <div class="bg-indigo-950/30 p-2 rounded border border-indigo-900/40 flex justify-between">
+                <span>PHC Blood Bank Unit</span>
+                <span class="text-emerald-400 font-bold">Active</span>
+              </div>
+              <div class="bg-indigo-950/30 p-2 rounded border border-indigo-900/40 flex justify-between">
+                <span>National Helpline</span>
+                <a href="tel:108" class="text-indigo-400 underline">Dial 108</a>
+              </div>
+            </div>
+          </div>
+
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
               <i data-lucide="pill" class="w-4 h-4 text-emerald-400"></i> Generic Drug Lookup
@@ -909,21 +1120,21 @@
               <i data-lucide="calendar" class="w-4 h-4 text-rose-400"></i> Child Vaccination Checklist (0-5 Yrs)
             </h3>
             <div class="space-y-2 text-xs">
-              <label class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded border border-indigo-950 hover:bg-indigo-950/50 cursor-pointer">
+              <label class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded border border-indigo-900 hover:bg-indigo-950/50 cursor-pointer">
                 <input type="checkbox" id="vac-bcg" class="accent-rose-500 w-4 h-4" onchange="saveVaccineState()">
                 <div>
                   <p class="font-bold text-white">BCG Vaccine (Birth)</p>
                   <p class="text-[10px] text-muted">Prevents Tuberculosis</p>
                 </div>
               </label>
-              <label class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded border border-indigo-950 hover:bg-indigo-950/50 cursor-pointer">
+              <label class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded border border-indigo-900 hover:bg-indigo-950/50 cursor-pointer">
                 <input type="checkbox" id="vac-opv" class="accent-rose-500 w-4 h-4" onchange="saveVaccineState()">
                 <div>
                   <p class="font-bold text-white">OPV (6, 10, 14 Weeks)</p>
                   <p class="text-[10px] text-muted">Polio vaccine oral drops</p>
                 </div>
               </label>
-              <label class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded border border-indigo-950 hover:bg-indigo-950/50 cursor-pointer">
+              <label class="flex items-center gap-2 bg-indigo-950/30 p-2 rounded border border-indigo-900 hover:bg-indigo-950/50 cursor-pointer">
                 <input type="checkbox" id="vac-mr" class="accent-rose-500 w-4 h-4" onchange="saveVaccineState()">
                 <div>
                   <p class="font-bold text-white">Measles & Rubella (9-12 Months)</p>
@@ -1006,6 +1217,18 @@
 
         <!-- Resume & Cover Letter Builder -->
         <div class="space-y-6">
+          <!-- Skill Gap Analyzer Card -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">RozgarAI Skill Gap Analyzer</h3>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between items-center bg-indigo-950/30 p-2.5 rounded border border-indigo-900/40">
+                <span>Target: Data Entry</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold text-[9px]">80% Match</span>
+              </div>
+              <p class="text-[10px] text-muted">Recommendation: Complete basic spreadsheet training courses in SkillBridge module.</p>
+            </div>
+          </div>
+
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
               <i data-lucide="file-text" class="w-4 h-4 text-indigo-400"></i> AI Resume & Cover Letter Writer
@@ -1015,9 +1238,10 @@
               <input id="resume-phone" type="text" placeholder="Contact Number" class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-white">
               <input id="resume-skills" type="text" placeholder="Key Skills (typing, computer basics)" class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-white">
               <textarea id="resume-exp" rows="2" placeholder="Experience details..." class="w-full bg-indigo-950/50 border border-indigo-900 rounded p-2 text-white"></textarea>
-              <button onclick="generateResume()" class="w-full py-2 bg-indigo-950 border border-indigo-800 hover:bg-indigo-900 font-semibold rounded text-slate-200 transition">
-                Assemble Resume
-              </button>
+              <div class="flex gap-2">
+                <button onclick="generateResume('en')" class="w-1/2 py-2 bg-indigo-950 border border-indigo-800 hover:bg-indigo-900 font-semibold rounded text-slate-200 text-[11px]">English Cover Letter</button>
+                <button onclick="generateResume('hi')" class="w-1/2 py-2 bg-indigo-950 border border-indigo-800 hover:bg-indigo-900 font-semibold rounded text-slate-200 text-[11px]">Hindi Cover Letter</button>
+              </div>
             </div>
             <div id="resume-preview-box" class="hidden bg-white text-slate-900 p-4 rounded border text-xs space-y-2 font-mono">
               <!-- Rendered via JS -->
@@ -1053,7 +1277,7 @@
       <div class="flex border-b border-indigo-950 gap-4 text-xs font-bold text-slate-400 pb-2">
         <button onclick="toggleDukaanTabs('ledger')" id="dukaan-btn-ledger" class="text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none">Ledger Book</button>
         <button onclick="toggleDukaanTabs('inventory')" id="dukaan-btn-inventory" class="pb-1 focus:outline-none">Inventory & GST Setup</button>
-        <button onclick="toggleDukaanTabs('marketing')" id="dukaan-btn-marketing" class="pb-1 focus:outline-none">Logo Designer</button>
+        <button onclick="toggleDukaanTabs('marketing')" id="dukaan-btn-marketing" class="pb-1 focus:outline-none">Design Materials</button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1149,33 +1373,62 @@
             </div>
           </div>
 
-          <!-- Logo Designer Tab -->
-          <div id="dukaan-tab-marketing" class="glass rounded-xl p-5 space-y-4 hidden">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
-              <i data-lucide="palette" class="w-4 h-4 text-amber-400"></i> Brand Logo Downloader (PNG)
-            </h3>
-            <p class="text-xs text-muted">Generate a custom visual banner card logo for your shop and save it directly.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="space-y-3">
-                <input id="logo-text-input" type="text" placeholder="Shop Name..." class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white" oninput="generateLogo()">
-                <div class="flex gap-2">
-                  <button onclick="changeLogoColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 border border-white"></button>
-                  <button onclick="changeLogoColor('#6366f1')" class="w-6 h-6 rounded-full bg-indigo-500 border border-white"></button>
-                  <button onclick="changeLogoColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 border border-white"></button>
+          <!-- Marketing Materials Tab -->
+          <div id="dukaan-tab-marketing" class="space-y-6 hidden">
+            <!-- Logo canvas -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+                <i data-lucide="palette" class="w-4 h-4 text-amber-400"></i> Brand Logo Downloader (PNG)
+              </h3>
+              <p class="text-xs text-muted">Generate a custom visual banner card logo for your shop and save it directly.</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="space-y-3">
+                  <input id="logo-text-input" type="text" placeholder="Shop Name..." class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white" oninput="generateLogo()">
+                  <div class="flex gap-2">
+                    <button onclick="changeLogoColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 border border-white"></button>
+                    <button onclick="changeLogoColor('#6366f1')" class="w-6 h-6 rounded-full bg-indigo-500 border border-white"></button>
+                    <button onclick="changeLogoColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 border border-white"></button>
+                  </div>
+                  <button onclick="downloadLogo()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold text-white transition">
+                    Download Logo Image (.png)
+                  </button>
                 </div>
-                <button onclick="downloadLogo()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-semibold text-white transition">
-                  Download Logo Image (.png)
-                </button>
+                <div class="flex justify-center items-center p-3 bg-indigo-950/20 rounded border border-indigo-950">
+                  <canvas id="logo-canvas" width="200" height="80" class="border border-indigo-900 rounded"></canvas>
+                </div>
               </div>
-              <div class="flex justify-center items-center p-3 bg-indigo-950/20 rounded border border-indigo-950">
-                <canvas id="logo-canvas" width="200" height="80" class="border border-indigo-900 rounded"></canvas>
+            </div>
+
+            <!-- Business Card Canvas -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Digital Business Card Creator</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="space-y-2">
+                  <input id="card-phone-input" type="text" placeholder="Enter Phone number..." class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white" oninput="generateBusinessCard()">
+                  <button onclick="downloadBusinessCard()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded font-bold text-white">Download Card</button>
+                </div>
+                <div class="flex items-center justify-center p-2 bg-indigo-950/30 rounded border border-indigo-900">
+                  <canvas id="card-canvas" width="220" height="120" class="border border-indigo-900 rounded"></canvas>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Business Planner & CRM -->
+        <!-- Business Planner, CRM & WhatsApp Templates -->
         <div class="space-y-6">
+          <!-- WhatsApp Business Templates -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">WhatsApp Business Templates (Hindi)</h3>
+            <div class="space-y-2 text-xs">
+              <div class="bg-indigo-950/40 p-2.5 rounded border border-indigo-900/40 space-y-1">
+                <p class="text-slate-300 font-bold">Payment Reminder Template</p>
+                <p class="text-[10px] text-muted">"नमस्ते, आपका दुकान का शेष भुगतान ₹[अमाउंट] बकाया है। कृपया भुगतान करें।"</p>
+                <button onclick="navigator.clipboard.writeText('नमस्ते, आपका दुकान का शेष भुगतान बकाया है। कृपया समय पर भुगतान करें। धन्यवाद।'); alert('Template copied!')" class="text-[9px] text-indigo-400 underline">Copy Template</button>
+              </div>
+            </div>
+          </div>
+
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
               <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i> AI Micro-Business Planner
@@ -1256,6 +1509,15 @@
             </div>
           </div>
 
+          <!-- Meeting minutes recorder -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
+              <i data-lucide="edit-3" class="w-4 h-4 text-purple-400"></i> SHG Meeting Minutes Recorder
+            </h3>
+            <textarea id="shg-meeting-minutes" rows="3" placeholder="Log details discussed during this week's SHG assembly..." class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-xs text-white"></textarea>
+            <button onclick="alert('Meeting logs saved locally and cached.'); document.getElementById('shg-meeting-minutes').value=''" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-850 rounded text-xs font-semibold text-slate-200">Save Minutes Log</button>
+          </div>
+
           <!-- Micro business ideas -->
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Home-Based Women Business Roadmaps</h3>
@@ -1272,7 +1534,7 @@
                   <h4 class="font-bold text-white">Stitching & Custom Tailoring</h4>
                   <p class="text-[10px] text-muted">Register as Meesho seller to sell craft products across India.</p>
                 </div>
-                <button onclick="alert('Requires: GST identification number or bank account setup.')" class="px-2.5 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold">View Guide</button>
+                <button onclick="alert('Requires: FSSAI or standard GST identification number.')" class="px-2.5 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold">View Guide</button>
               </div>
             </div>
           </div>
@@ -1280,6 +1542,37 @@
 
         <!-- Safety Features & legal Rights -->
         <div class="space-y-6">
+          <!-- Pricing Calculator for Handmade products -->
+          <div class="glass rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Handmade Products Pricing Calculator</h3>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <label class="block text-slate-300 mb-0.5">Raw Material (₹)</label>
+                <input id="pricing-raw" type="number" value="120" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white" oninput="calcProductPrice()">
+              </div>
+              <div>
+                <label class="block text-slate-300 mb-0.5">Hours Spent</label>
+                <input id="pricing-hours" type="number" value="3" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white" oninput="calcProductPrice()">
+              </div>
+            </div>
+            <p class="text-emerald-400 font-bold text-xs text-right">Recommend Price: <span id="pricing-recommend-result">₹300</span></p>
+          </div>
+
+          <!-- Women legal rights -->
+          <div class="glass rounded-xl p-5 space-y-4 text-xs">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Women Legal Rights Reference Cards</h3>
+            <div class="space-y-1.5 text-slate-200">
+              <details class="bg-indigo-950/20 p-2.5 rounded border border-indigo-900/60">
+                <summary class="font-bold cursor-pointer">Property Ownership Rights</summary>
+                <p class="pt-1 text-[10px] text-muted">Hindu Succession Act guarantees equal shares in ancestral property splits.</p>
+              </details>
+              <details class="bg-indigo-950/20 p-2.5 rounded border border-indigo-900/60">
+                <summary class="font-bold cursor-pointer">Maternity Benefit Schemes</summary>
+                <p class="pt-1 text-[10px] text-muted">PM Matru Vandana Yojana awards ₹5,000 incentive transfers to pregnant mothers.</p>
+              </details>
+            </div>
+          </div>
+
           <div class="glass rounded-xl p-5 space-y-4 border-t-2 border-t-rose-600">
             <h3 class="text-sm font-semibold tracking-wider text-rose-400 uppercase flex items-center gap-2">
               <i data-lucide="shield-alert" class="w-4 h-4"></i> Emergency SOS Console
@@ -1370,11 +1663,30 @@
               </div>
               <div id="doc-check-result" class="hidden bg-slate-900/60 p-3 rounded text-xs border border-indigo-900"></div>
             </div>
+
+            <!-- Voter ID application guide -->
+            <div class="glass rounded-xl p-5 space-y-4 text-xs">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Voter ID (Form-6) Registration Guide</h3>
+              <ul class="list-disc pl-4 space-y-1 text-slate-300">
+                <li>Submit Form-6 online via NVSP portal or visit BLO (Booth Level Officer).</li>
+                <li>Requires birth proof and address validation copies.</li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <!-- Scheme Eligibility Calculator & RTI helper -->
+        <!-- Scheme Eligibility Calculator & MLA Directory -->
         <div class="space-y-6">
+          <!-- MLA MP Contacts Directory -->
+          <div class="glass rounded-xl p-5 space-y-4 text-xs">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">District MLA / MP Directory</h3>
+            <div class="bg-indigo-950/20 p-3 rounded border border-indigo-900/40">
+              <p class="font-bold text-white text-sm">Shri Somvir Singh (MLA)</p>
+              <p class="text-[10px] text-muted">Loharu Assembly constituency</p>
+              <p class="text-indigo-400 font-bold mt-1">Ph: +91 94160-XXXXX</p>
+            </div>
+          </div>
+
           <div class="glass rounded-xl p-5 space-y-4">
             <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
               <i data-lucide="clipboard-check" class="w-4 h-4 text-cyan-400"></i> Government Scheme Eligibility
@@ -1410,7 +1722,7 @@
                 Generate Draft Letter
               </button>
             </div>
-            <div id="rti-result-box" class="hidden bg-slate-900/80 p-3 rounded text-xs border border-indigo-950 space-y-2">
+            <div id="rti-result-box" class="hidden bg-slate-900/80 p-3 text-xs border border-indigo-950 space-y-2">
               <!-- RTI draft -->
             </div>
           </div>
@@ -1604,6 +1916,7 @@
       shg: [],
       notices: [],
       stock: [],
+      mentorSessions: [],
       streakCount: 0,
       vaccinations: {},
       offlineQueue: [],
@@ -1643,6 +1956,7 @@
           if (!state.notices || state.notices.length === 0) state.notices = parsed.notices;
           if (!state.shg || state.shg.length === 0) state.shg = parsed.shg;
           state.stock = parsed.stock || [];
+          state.mentorSessions = parsed.mentorSessions || [];
         } catch (e) {
           console.error("Failed parsing local state", e);
         }
@@ -1688,6 +2002,7 @@
       if (state.user) {
         document.getElementById('auth-modal').classList.add('hidden');
         document.getElementById('auth-modal').classList.remove('flex');
+        drawProfileQr();
       } else {
         document.getElementById('auth-modal').classList.remove('hidden');
         document.getElementById('auth-modal').classList.add('flex');
@@ -1759,9 +2074,11 @@
         initLedgerChart();
         renderCrmList();
         generateLogo();
+        generateBusinessCard();
         toggleDukaanTabs('ledger');
       } else if (moduleName === 'shakti') {
         renderShgTable();
+        calcProductPrice();
       } else if (moduleName === 'samaj') {
         renderNotices();
         toggleSamajTabs('board');
@@ -1771,6 +2088,8 @@
         toggleRozgarTabs('board');
       } else if (moduleName === 'skill') {
         renderQuizQuestion();
+        renderLibraryResources();
+        renderScheduledSessions();
         toggleSkillTabs('mentor');
       } else if (moduleName === 'health') {
         updatePregnancyWeek(document.getElementById('preg-week-slider').value);
@@ -1813,15 +2132,19 @@
       const role = document.getElementById('profile-role').value;
       const stateVal = document.getElementById('profile-state').value;
       const dist = document.getElementById('profile-district').value;
+      const vill = document.getElementById('profile-village').value;
+      const age = document.getElementById('profile-age').value;
+      const gen = document.getElementById('profile-gender').value;
 
-      if (!name || !stateVal || !dist) {
+      if (!name || !stateVal || !dist || !vill) {
         alert("Please enter all details to register.");
         return;
       }
 
-      state.user = { name, role, state: stateVal, district: dist };
+      state.user = { name, role, state: stateVal, district: dist, village: vill, age, gender: gen };
       saveState();
       updateGreetingPanel();
+      drawProfileQr();
       
       // Hide auth overlay
       document.getElementById('auth-modal').classList.add('hidden');
@@ -1834,6 +2157,37 @@
       document.getElementById('dash-role-text').innerText = state.user.role.toUpperCase();
       document.getElementById('dash-streak').innerText = `${state.streakCount} Days`;
       document.getElementById('applied-jobs-count').innerText = state.jobsApplied.length;
+
+      // Update avatar card text
+      document.getElementById('user-avatar-name').innerText = state.user.name;
+      document.getElementById('user-avatar-vill').innerText = `${state.user.village} Village`;
+    }
+
+    // Dynamic QR Profile drawing
+    function drawProfileQr() {
+      const canvas = document.getElementById('profile-qr');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,100,100);
+      
+      // Draw simulated QR blocks
+      ctx.fillStyle = '#0f0f23';
+      ctx.fillRect(5, 5, 20, 20);
+      ctx.fillRect(75, 5, 20, 20);
+      ctx.fillRect(5, 75, 20, 20);
+      ctx.fillRect(35, 35, 30, 30);
+      
+      ctx.fillRect(15, 45, 10, 10);
+      ctx.fillRect(55, 15, 10, 10);
+      ctx.fillRect(75, 75, 10, 10);
+    }
+
+    // ================= THEME TOGGLE =================
+    let isLightTheme = false;
+    function toggleTheme() {
+      isLightTheme = !isLightTheme;
+      document.getElementById('app-body').classList.toggle('light-theme', isLightTheme);
     }
 
     // ================= SETTINGS PANEL =================
@@ -2122,7 +2476,7 @@
 
     function formatAIPanelOutput(boxElement, rawText) {
       boxElement.innerHTML = `
-        <div class="whitespace-pre-wrap leading-relaxed text-slate-300 pr-2">${rawText}</div>
+        <div class="whitespace-pre-wrap leading-relaxed text-slate-300 pr-2 text-black dark:text-slate-300">${rawText}</div>
         <div class="flex gap-2 mt-3 pt-2.5 border-t border-indigo-950/40">
           <button onclick="speakText(this.parentElement.previousElementSibling.innerText)" class="px-3 py-1 bg-indigo-900 border border-indigo-700/40 hover:bg-indigo-800 rounded flex items-center gap-1.5 text-[10px] text-slate-200 transition font-semibold">
             <i data-lucide="volume-2" class="w-3.5 h-3.5 text-secondary"></i> Read Aloud
@@ -2185,14 +2539,60 @@
       document.getElementById('kisan-tab-weather').classList.toggle('hidden', tabName !== 'weather');
       document.getElementById('kisan-tab-soil').classList.toggle('hidden', tabName !== 'soil');
       document.getElementById('kisan-tab-insurance').classList.toggle('hidden', tabName !== 'insurance');
+      document.getElementById('kisan-tab-water').classList.toggle('hidden', tabName !== 'water');
 
       document.getElementById('kisan-btn-weather').className = tabName === 'weather' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('kisan-btn-soil').className = tabName === 'soil' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('kisan-btn-insurance').className = tabName === 'insurance' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('kisan-btn-water').className = tabName === 'water' ? 'text-emerald-400 border-b-2 border-emerald-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       
       if (tabName === 'soil') {
         updateSoilPh(document.getElementById('soil-ph').value);
         updateCropCalendar(document.getElementById('crop-cal-slider').value);
+        matchIntercropping();
+      }
+    }
+
+    function checkPmKisanStatus() {
+      const regNo = document.getElementById('pm-kisan-id').value;
+      const box = document.getElementById('pm-kisan-result');
+      if (!regNo) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `💸 **PM-Kisan Installment Status:**<br/>
+        Registration: ${regNo}<br/>
+        Status: <span class="text-emerald-400 font-bold">16th Installment Disbursed</span>.<br/>
+        Transaction Date: May 20, 2026. Account: *XXXXX948`;
+    }
+
+    function matchIntercropping() {
+      const crop = document.getElementById('kisan-inter-select').value;
+      const box = document.getElementById('kisan-intercropping-result');
+      if (crop === 'sugarcane') {
+        box.innerHTML = `🌱 **Intercrop:** Potato or Mustard.<br/>
+          **Advantage:** Boosts soil nitrogen cycles and provides short-term cash margins before Sugarcane maturation.`;
+      } else if (crop === 'wheat') {
+        box.innerHTML = `🌱 **Intercrop:** Chickpea or Safflower.<br/>
+          **Advantage:** Restores potassium balances and breaks pest reproductive timelines.`;
+      } else {
+        box.innerHTML = `🌱 **Intercrop:** Lentils.<br/>
+          **Advantage:** High organic nitrogen fixation parameters.`;
+      }
+    }
+
+    function calculateIrrigation() {
+      const crop = document.getElementById('water-crop').value;
+      const dry = document.getElementById('water-dryness').value;
+      const box = document.getElementById('irrigation-result');
+      box.classList.remove('hidden');
+
+      if (crop === 'paddy') {
+        if (dry === 'high') {
+          box.innerHTML = `💧 **Irrigation Advisory:** Apply **8,000 Liters** water per acre immediately. Soil is cracked, high percolation risk.`;
+        } else {
+          box.innerHTML = `💧 **Irrigation Advisory:** Maintain **4,000 Liters** ponding depth. Soil has moderate moisture.`;
+        }
+      } else {
+        box.innerHTML = `💧 **Irrigation Advisory:** Apply **2,000 Liters** crop sprinkler cycles. Moderate moisture index recommended.`;
       }
     }
 
@@ -2273,13 +2673,71 @@
     function toggleSkillTabs(tabName) {
       document.getElementById('skill-tab-mentor').classList.toggle('hidden', tabName !== 'mentor');
       document.getElementById('skill-tab-study').classList.toggle('hidden', tabName !== 'study');
+      document.getElementById('skill-tab-resources').classList.toggle('hidden', tabName !== 'resources');
 
       document.getElementById('skill-btn-mentor').className = tabName === 'mentor' ? 'text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('skill-btn-study').className = tabName === 'study' ? 'text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('skill-btn-resources').className = tabName === 'resources' ? 'text-blue-400 border-b-2 border-blue-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       
       if (tabName === 'study') {
         generateStudySchedule();
       }
+    }
+
+    function solveDoubtImage() {
+      const box = document.getElementById('doubt-solver-result');
+      box.classList.remove('hidden');
+      box.innerHTML = `📝 **AI Doubt Solver Resolution:**<br/>
+        **Equation:** Solve 2x + 5 = 15.<br/>
+        **Step 1:** Subtract 5 from both sides: 2x = 10.<br/>
+        **Step 2:** Divide both sides by 2: x = 5.<br/>
+        **Result:** x = 5. (Concept: Basic Algebraic reduction).`;
+    }
+
+    const mockResources = [
+      { id: 1, name: "Matric Maths Formula PDF", size: "1.2 MB", type: "class10" },
+      { id: 2, name: "NCERT Class 12 Physics Notes", size: "4.5 MB", type: "class12" }
+    ];
+
+    function renderLibraryResources() {
+      const filter = document.getElementById('res-class-filter').value;
+      const box = document.getElementById('library-resource-list');
+      box.innerHTML = '';
+      
+      const filtered = mockResources.filter(r => filter === 'all' || r.type === filter);
+      filtered.forEach(r => {
+        box.innerHTML += `
+          <div class="bg-indigo-950/20 p-2.5 rounded border border-indigo-950 flex justify-between items-center">
+            <span>${r.name} (${r.size})</span>
+            <button onclick="alert('Downloading asset file...')" class="text-xs text-indigo-400 font-bold hover:underline">Download</button>
+          </div>
+        `;
+      });
+    }
+
+    function matchMentor() {
+      alert("Matched Dr. Anand Prasad for Biotech & Agro goals!");
+    }
+
+    function scheduleMentorSession() {
+      const dt = document.getElementById('mentor-session-date').value;
+      if (!dt) return;
+      state.mentorSessions.push({ date: dt, status: 'Approved' });
+      saveState();
+      renderScheduledSessions();
+    }
+
+    function renderScheduledSessions() {
+      const box = document.getElementById('mentor-scheduled-list');
+      box.innerHTML = '';
+      state.mentorSessions.forEach(s => {
+        box.innerHTML += `
+          <div class="bg-indigo-950/30 p-2 rounded border border-indigo-900/40 flex justify-between text-xs">
+            <span>Session: ${s.date}</span>
+            <span class="text-emerald-400 font-bold">Status: ${s.status}</span>
+          </div>
+        `;
+      });
     }
 
     function selectMentor(name) {
@@ -2297,13 +2755,6 @@
       
       const rep = await queryAI(`Generate a study schedule for ${hours} hours targeting ${exam}`);
       box.innerText = rep;
-    }
-
-    function changeMentor() {
-      const select = document.getElementById('mentor-select');
-      const box = document.getElementById('mentor-chat-box');
-      document.getElementById('mentor-name-title').innerText = select.options[select.selectedIndex].text.split(' - ')[0];
-      box.innerHTML = `<div class="bg-indigo-950/40 p-2.5 rounded-lg max-w-[80%]">How can I assist you with your learning goals today?</div>`;
     }
 
     async function sendMentorMessage() {
@@ -2370,10 +2821,12 @@
       document.getElementById('health-tab-symptoms').classList.toggle('hidden', tabName !== 'symptoms');
       document.getElementById('health-tab-maternal').classList.toggle('hidden', tabName !== 'maternal');
       document.getElementById('health-tab-firstaid').classList.toggle('hidden', tabName !== 'firstaid');
+      document.getElementById('health-tab-mental').classList.toggle('hidden', tabName !== 'mental');
 
       document.getElementById('health-btn-symptoms').className = tabName === 'symptoms' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('health-btn-maternal').className = tabName === 'maternal' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('health-btn-firstaid').className = tabName === 'firstaid' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('health-btn-mental').className = tabName === 'mental' ? 'text-rose-400 border-b-2 border-rose-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
     }
 
     function checkDrugInteraction() {
@@ -2407,50 +2860,6 @@
       state.healthLogs.push(log);
       saveState();
       queueAction('health_logs', { user_id: state.user.name, log_type: 'symptom', data: log });
-    }
-
-    function findHospitals() {
-      const coordsEl = document.getElementById('health-coords');
-      const listEl = document.getElementById('health-hospitals-list');
-      
-      coordsEl.innerText = "Retrieving GPS coordinates...";
-      
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          const lat = pos.coords.latitude.toFixed(4);
-          const lon = pos.coords.longitude.toFixed(4);
-          coordsEl.innerText = `Lat: ${lat}, Lon: ${lon}`;
-          
-          listEl.innerHTML = `
-            <div class="bg-indigo-950/40 p-3 rounded-lg border border-indigo-900/30 flex justify-between items-center text-xs">
-              <div>
-                <p class="font-bold text-white">Sub-District Civil Hospital</p>
-                <p class="text-[10px] text-muted">2.4 km away | Emergency unit active</p>
-              </div>
-              <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" class="text-indigo-400">Map</a>
-            </div>
-            <div class="bg-indigo-950/40 p-3 rounded-lg border border-indigo-900/30 flex justify-between items-center text-xs">
-              <div>
-                <p class="font-bold text-white">Primary Health Centre (PHC)</p>
-                <p class="text-[10px] text-muted">4.8 km away | Free medicines dispensery</p>
-              </div>
-              <a href="https://maps.google.com/?q=${lat},${lon}" target="_blank" class="text-indigo-400">Map</a>
-            </div>
-          `;
-        },
-        () => {
-          coordsEl.innerText = "Delhi (28.6139, 77.2090) — GPS Denied";
-          listEl.innerHTML = `
-            <div class="bg-indigo-950/40 p-3 rounded-lg border border-indigo-900/30 flex justify-between items-center text-xs">
-              <div>
-                <p class="font-bold text-white">Delhi General Government PHC</p>
-                <p class="text-[10px] text-muted">1.2 km away | Doctor active</p>
-              </div>
-              <button class="text-slate-400 text-xs font-semibold">Default Location</button>
-            </div>
-          `;
-        }
-      );
     }
 
     function searchMedicine() {
@@ -2553,9 +2962,9 @@
       const filtered = jobsDatabase.filter(j => filter === 'all' || j.sector === filter);
       filtered.forEach(j => {
         container.innerHTML += `
-          <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 flex justify-between items-center text-xs">
+          <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/30 flex justify-between items-center text-xs text-white">
             <div>
-              <h4 class="font-bold text-white text-sm">${j.title}</h4>
+              <h4 class="font-bold text-sm">${j.title}</h4>
               <p class="text-[10px] text-muted">${j.org} • ${j.loc}</p>
               <p class="text-emerald-400 font-bold mt-1">${j.sal}</p>
             </div>
@@ -2628,7 +3037,7 @@
       }, 1000);
     }
 
-    function generateResume() {
+    function generateResume(lang) {
       const name = document.getElementById('resume-name').value;
       const phone = document.getElementById('resume-phone').value;
       const skills = document.getElementById('resume-skills').value;
@@ -2641,17 +3050,30 @@
       }
 
       preview.classList.remove('hidden');
-      preview.innerHTML = `
-        <div class="text-center font-bold border-b pb-2 mb-2 text-sm text-black">${name.toUpperCase()}</div>
-        <p class="text-black"><strong>Contact:</strong> ${phone}</p>
-        <p class="text-black"><strong>Location:</strong> ${state.user ? state.user.district : 'Bhiwani'}, ${state.user ? state.user.state : 'Haryana'}</p>
-        <p class="text-black"><strong>Capabilities:</strong> ${skills}</p>
-        <p class="text-black"><strong>Background Experience:</strong> ${exp}</p>
-        <div class="pt-2 flex justify-between">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('resume-preview-box').innerText); alert('Copied to clipboard!');" class="text-[10px] text-blue-600 underline">Copy Text</button>
-          <button onclick="window.print()" class="text-[10px] text-blue-600 underline">Print Profile</button>
-        </div>
-      `;
+      if (lang === 'hi') {
+        preview.innerHTML = `
+          <div class="text-center font-bold border-b pb-2 mb-2 text-sm text-black">${name.toUpperCase()} (बायोडाटा)</div>
+          <p class="text-black"><strong>संपर्क:</strong> ${phone}</p>
+          <p class="text-black"><strong>कौशल:</strong> ${skills}</p>
+          <p class="text-black"><strong>अनुभव विवरण:</strong> ${exp}</p>
+          <div class="pt-2 flex justify-between">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('resume-preview-box').innerText); alert('Copied!');" class="text-[10px] text-blue-600 underline">कॉपी करें</button>
+            <button onclick="window.print()" class="text-[10px] text-blue-600 underline">प्रिंट करें</button>
+          </div>
+        `;
+      } else {
+        preview.innerHTML = `
+          <div class="text-center font-bold border-b pb-2 mb-2 text-sm text-black">${name.toUpperCase()}</div>
+          <p class="text-black"><strong>Contact:</strong> ${phone}</p>
+          <p class="text-black"><strong>Location:</strong> ${state.user ? state.user.district : 'Bhiwani'}, ${state.user ? state.user.state : 'Haryana'}</p>
+          <p class="text-black"><strong>Capabilities:</strong> ${skills}</p>
+          <p class="text-black"><strong>Background Experience:</strong> ${exp}</p>
+          <div class="pt-2 flex justify-between">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('resume-preview-box').innerText); alert('Copied!');" class="text-[10px] text-blue-600 underline">Copy Text</button>
+            <button onclick="window.print()" class="text-[10px] text-blue-600 underline">Print Profile</button>
+          </div>
+        `;
+      }
     }
 
     function initExamList() {
@@ -2832,6 +3254,39 @@
       link.click();
     }
 
+    function generateBusinessCard() {
+      const canvas = document.getElementById('card-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const ph = document.getElementById('card-phone-input').value || "+91 XXXXX-XXXXX";
+      
+      ctx.fillStyle = '#1e1b4b';
+      ctx.fillRect(0, 0, 220, 120);
+      
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(4, 4, 212, 112);
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px "Plus Jakarta Sans"';
+      ctx.textAlign = 'center';
+      ctx.fillText(state.user ? state.user.name.toUpperCase() : 'PARTNER CARD', 110, 40);
+      
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '9px "Inter"';
+      ctx.fillText(`Role: ${state.user ? state.user.role.toUpperCase() : 'GENERAL'}`, 110, 60);
+      ctx.fillText(`Phone: ${ph}`, 110, 80);
+      ctx.fillText(`Location: ${state.user ? state.user.village : 'Tigrana'}`, 110, 95);
+    }
+
+    function downloadBusinessCard() {
+      const canvas = document.getElementById('card-canvas');
+      const link = document.createElement('a');
+      link.download = 'business_card.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
     function generateInvoice() {
       const item = document.getElementById('inv-item').value;
       const qty = Number(document.getElementById('inv-qty').value) || 0;
@@ -2918,6 +3373,16 @@
           </tr>
         `;
       });
+    }
+
+    function calcProductPrice() {
+      const raw = Number(document.getElementById('pricing-raw').value) || 0;
+      const hours = Number(document.getElementById('pricing-hours').value) || 0;
+      const box = document.getElementById('pricing-recommend-result');
+      
+      const labor = hours * 60; // 60 Rs hourly rate
+      const total = Math.ceil((raw + labor) * 1.2); // 20% margin
+      box.innerText = `₹${total}`;
     }
 
     async function addShgRecord() {
@@ -3052,7 +3517,7 @@
       }
       const q = quizQuestions[currentQuestionIdx];
       container.innerHTML = `
-        <p class="font-semibold text-white">Question ${currentQuestionIdx + 1}: ${q.q}</p>
+        <p class="font-semibold text-white">${q.q}</p>
         <div class="space-y-1.5 pt-1">
           ${q.o.map((opt, idx) => `
             <button onclick="submitAnswer(${idx})" class="w-full text-left bg-indigo-950/40 border border-indigo-900/60 p-2 rounded hover:bg-indigo-950 transition text-[11px] text-slate-300">
@@ -3196,6 +3661,17 @@
           },
           plugins: { legend: { labels: { color: '#f1f5f9' } } }
         }
+      });
+    }
+
+    // PWA Service Worker Mock Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          console.log('Mock ServiceWorker registration successful:', reg.scope);
+        }).catch(err => {
+          console.log('Mock ServiceWorker registration failed:', err);
+        });
       });
     }
 

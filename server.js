@@ -38,6 +38,8 @@ if (!fs.existsSync(DB_PATH)) {
 }
 
 // Serve static frontend files
+app.use(express.static(__dirname));
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
