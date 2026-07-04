@@ -1646,6 +1646,20 @@
     }
 
     // ================= LANGUAGE SELECTOR =================
+    function applyTranslations() {
+      const langData = translations[state.lang] || translations['en'];
+      document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if (langData[key]) {
+          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = langData[key];
+          } else {
+            el.innerText = langData[key];
+          }
+        }
+      });
+    }
+
     function changeLanguage(val) {
       state.lang = val;
       if (val === 'hi' || val === 'en') {
@@ -2192,7 +2206,6 @@
       }
       
       document.getElementById('language-select').value = state.lang;
-      document.getElementById('lang-btn-text').innerText = state.lang === 'en' ? 'हिंदी' : 'English';
       
       applyTranslations();
       navigateTo(state.currentModule);
