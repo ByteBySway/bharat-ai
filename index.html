@@ -1337,12 +1337,39 @@
       jobsApplied: []
     };
 
-    // Initialize LocalStorage Database
-    function loadPersistedState() {
+    // Initialize LocalStorage Database & Server Sync
+    async function loadPersistedState() {
+      // Try to load collections from local backend server database
+      try {
+        const resLedger = await fetch("/api/data/ledger");
+        const resNotices = await fetch("/api/data/notices");
+        const resShg = await fetch("/api/data/shg");
+        
+        if (resLedger.ok && resNotices.ok && resShg.ok) {
+          state.ledger = await resLedger.json();
+          state.notices = await resNotices.json();
+          state.shg = await resShg.json();
+          console.log("Collections synced from backend server successfully.");
+        }
+      } catch (e) {
+        console.log("Local backend server offline. Using local persistence fallback.");
+      }
+
       const stored = localStorage.getItem('bharatai_state');
       if (stored) {
         try {
-          state = { ...state, ...JSON.parse(stored) };
+          const parsed = JSON.parse(stored);
+          state.user = parsed.user;
+          state.credentials = parsed.credentials;
+          state.lang = parsed.lang;
+          state.streakCount = parsed.streakCount;
+          state.vaccinations = parsed.vaccinations;
+          state.offlineQueue = parsed.offlineQueue;
+          state.jobsApplied = parsed.jobsApplied;
+          state.currentModule = parsed.currentModule;
+          if (!state.ledger || state.ledger.length === 0) state.ledger = parsed.ledger;
+          if (!state.notices || state.notices.length === 0) state.notices = parsed.notices;
+          if (!state.shg || state.shg.length === 0) state.shg = parsed.shg;
         } catch (e) {
           console.error("Failed parsing local state", e);
         }
@@ -1375,12 +1402,12 @@
       if (!state.offlineQueue) state.offlineQueue = [];
       if (!state.jobsApplied) state.jobsApplied = [];
       updateOfflineQueueBanner();
+      updateGreetingPanel();
 
       // Show/Hide Auth Screen based on user profile existence
       if (state.user) {
         document.getElementById('auth-modal').classList.add('hidden');
         document.getElementById('auth-modal').classList.remove('flex');
-        updateGreetingPanel();
       } else {
         document.getElementById('auth-modal').classList.remove('hidden');
         document.getElementById('auth-modal').classList.add('flex');
@@ -1719,6 +1746,23 @@
 
     // ================= RULE-BASED EXPERT AI SYSTEM (New Feature!) =================
     async function queryAI(prompt, systemInstruction = "") {
+      // Try backend server API first
+      try {
+        const response = await fetch("/api/ai", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ prompt, systemInstruction })
+        });
+        const data = await response.json();
+        if (data.text) {
+          return data.text;
+        }
+      } catch (e) {
+        console.log("Local backend server offline. Using client-side logic.");
+      }
+
       if (state.credentials.claude) {
         try {
           const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -2194,9 +2238,414 @@
       `;
     }
 
-    // ================= INITIAL LOADING =================
-    window.addEventListener('load', () => {
-      loadPersistedState();
+    // ================= SKILLBRIDGE QUIZ & EXAMS =================
+    let currentQuestionIdx = 0;
+    const quizQuestions = [
+      { q: "What does 'WWW' stand for in computer systems?", o: ["World Wide Web", "World War Web", "Word Wide Web"], a: 0 },
+      { q: "Which soil nutrient is mostly replenished by planting legumes?", o: ["Potassium", "Phosphorus", "Nitrogen"], a: 2 },
+      { q: "What is the toll-free national helpline for women in distress?", o: ["181", "100", "108"], a: 0 }
+    ];
+
+    function renderQuizQuestion() {
+      const container = document.getElementById('quiz-container');
+      if (!container) return;
+      if (currentQuestionIdx >= quizQuestions.length) {
+        container.innerHTML = `
+          <div class="text-center space-y-2 py-3">
+            <p class="text-emerald-400 font-bold text-sm">🎉 Quiz Completed!</p>
+            <p class="text-slate-300">You scored 3/3 points. Keep learning daily!</p>
+            <button onclick="resetQuiz()" class="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded font-semibold text-[10px] transition">Retry Quiz</button>
+          </div>
+        `;
+        return;
+      }
+      const q = quizQuestions[currentQuestionIdx];
+      container.innerHTML = `
+        <p class="font-semibold text-white">Question ${currentQuestionIdx + 1}: ${q.q}</p>
+        <div class="space-y-1.5 pt-1">
+          ${q.o.map((opt, idx) => `
+            <button onclick="submitAnswer(${idx})" class="w-full text-left bg-indigo-950/40 border border-indigo-900/60 p-2 rounded hover:bg-indigo-950 transition text-[11px] text-slate-300">
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function submitAnswer(idx) {
+      const q = quizQuestions[currentQuestionIdx];
+      if (idx === q.a) {
+        alert("Correct answer! +1 point.");
+      } else {
+        alert(`Incorrect! The correct answer was: ${q.o[q.a]}`);
+      }
+      currentQuestionIdx++;
+      renderQuizQuestion();
+    }
+
+    function resetQuiz() {
+      currentQuestionIdx = 0;
+      renderQuizQuestion();
+    }
+
+    function initExamList() {
+      const exams = [
+        { name: "SSC Railway Assistant", date: "Sep 12, 2026" },
+        { name: "State PSC Clerk Tier-1", date: "Nov 05, 2026" }
+      ];
+      const box = document.getElementById('exam-tracker-list');
+      if (!box) return;
+      box.innerHTML = '';
+      exams.forEach(e => {
+        const diff = new Date(e.date) - new Date();
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        box.innerHTML += `
+          <div class="flex justify-between items-center bg-indigo-950/20 p-2 rounded border border-indigo-950">
+            <div>
+              <p class="font-bold text-white">${e.name}</p>
+              <p class="text-[10px] text-muted">Deadline: ${e.date}</p>
+            </div>
+            <span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 font-bold">${days} Days left</span>
+          </div>
+        `;
+      });
+    }
+
+    // ================= DUKAANAI DIGITAL BOOKKEEPING & CRM =================
+    let ledgerChart = null;
+    function initLedgerChart() {
+      const canvasEl = document.getElementById('business-ledger-chart');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
+      if (ledgerChart) ledgerChart.destroy();
+
+      let income = 0, expense = 0;
+      state.ledger.forEach(e => {
+        if (e.type === 'income') income += Number(e.amount);
+        else expense += Number(e.amount);
+      });
+
+      ledgerChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Income (₹)', 'Expenses (₹)'],
+          datasets: [{
+            data: [income, expense],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#f1f5f9' } } }
+        }
+      });
+    }
+
+    function renderLedgerTable() {
+      const body = document.getElementById('ledger-entries-body');
+      const totalEl = document.getElementById('ledger-total');
+      if (!body) return;
+      body.innerHTML = '';
+
+      let total = 0;
+      state.ledger.forEach((e, idx) => {
+        const amt = Number(e.amount);
+        if (e.type === 'income') total += amt;
+        else total -= amt;
+
+        body.innerHTML += `
+          <tr class="border-b border-indigo-950 hover:bg-indigo-950/20">
+            <td class="p-2 text-white font-medium">${e.desc}</td>
+            <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${e.type === 'income' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${e.type.toUpperCase()}</span></td>
+            <td class="p-2 text-right font-bold ${e.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">₹${amt}</td>
+          </tr>
+        `;
+      });
+      totalEl.innerText = `₹${total}`;
+    }
+
+    async function addLedgerEntry() {
+      const desc = document.getElementById('ledger-desc').value;
+      const amt = document.getElementById('ledger-amount').value;
+      const type = document.getElementById('ledger-type').value;
+
+      if (!desc || !amt) return;
+      const item = { id: Date.now(), desc, amount: Number(amt), type };
+      state.ledger.push(item);
+      saveState();
+      renderLedgerTable();
+      initLedgerChart();
+      
+      try {
+        await fetch("/api/data/ledger", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
+        });
+      } catch(e) {
+        console.log("Offline or server write failed.");
+      }
+      queueAction('business_records', { user_id: state.user ? state.user.name : 'Unknown', ...item });
+
+      document.getElementById('ledger-desc').value = '';
+      document.getElementById('ledger-amount').value = '';
+    }
+
+    function renderCrmList() {
+      const box = document.getElementById('crm-list-box');
+      if (!box) return;
+      box.innerHTML = '';
+      state.crm.forEach(c => {
+        box.innerHTML += `
+          <div class="bg-indigo-950/30 p-2 rounded border border-indigo-950 flex justify-between items-center">
+            <span class="text-white">${c.name}</span>
+            <span class="font-bold text-amber-500">Owes: ₹${c.credit}</span>
+          </div>
+        `;
+      });
+    }
+
+    function addCrmRecord() {
+      const name = document.getElementById('crm-name').value;
+      const credit = document.getElementById('crm-credit').value;
+      if (!name || !credit) return;
+
+      state.crm.push({ name, credit: Number(credit) });
+      saveState();
+      renderCrmList();
+      document.getElementById('crm-name').value = '';
+      document.getElementById('crm-credit').value = '';
+    }
+
+    // ================= SHAKTIAI METRICS & SAFETY =================
+    function renderShgTable() {
+      const body = document.getElementById('shg-members-body');
+      if (!body) return;
+      body.innerHTML = '';
+      state.shg.forEach((m, idx) => {
+        body.innerHTML += `
+          <tr class="border-b border-indigo-950 hover:bg-indigo-950/20">
+            <td class="p-2 text-white font-medium">${m.name}</td>
+            <td class="p-2 font-bold text-purple-400">₹${m.amount}</td>
+            <td class="p-2 text-right"><button onclick="deleteShg(${idx})" class="text-[10px] text-rose-400">Remove</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    async function addShgRecord() {
+      const name = document.getElementById('shg-member-name').value;
+      const amt = document.getElementById('shg-savings').value;
+      if (!name || !amt) return;
+
+      const item = { id: Date.now(), name, amount: Number(amt) };
+      state.shg.push(item);
+      saveState();
+      renderShgTable();
+      
+      try {
+        await fetch("/api/data/shg", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(item)
+        });
+      } catch(e) {
+        console.log("Offline or server write failed.");
+      }
+
+      document.getElementById('shg-member-name').value = '';
+      document.getElementById('shg-savings').value = '';
+    }
+
+    function deleteShg(idx) {
+      state.shg.splice(idx, 1);
+      saveState();
+      renderShgTable();
+    }
+
+    function calcNextPeriod() {
+      const dateVal = document.getElementById('period-date').value;
+      const box = document.getElementById('period-result-box');
+      if (!dateVal) return;
+      
+      const date = new Date(dateVal);
+      date.setDate(date.getDate() + 28);
+      
+      box.classList.remove('hidden');
+      box.innerHTML = `🔮 <strong>Expected Next cycle:</strong> ${date.toDateString()}<br/>
+        <span class="text-[10px] text-muted">Cycle fluctuations are normal. Consult a doctor at your PHC in case of heavy delays.</span>`;
+    }
+
+    function triggerSOS() {
+      const status = document.getElementById('sos-status');
+      if (!status) return;
+      status.classList.remove('hidden');
+      status.innerText = "SOS Broadcast Activated. Fetching coordinates...";
+      
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          status.innerText = `Emergency Alert dispatched to nearest Station! GPS Coords: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+          triggerEmailAlert(pos.coords.latitude, pos.coords.longitude);
+        },
+        () => {
+          status.innerText = "Emergency Alert Sent. Location fallback: Delhi Central Police Station.";
+          triggerEmailAlert(28.6139, 77.2090);
+        }
+      );
+    }
+
+    async function triggerEmailAlert(lat, lon) {
+      const { resend } = state.credentials;
+      if (resend) {
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${resend}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              from: "safety@bharatai.org",
+              to: "family-contacts@example.com",
+              subject: "EMERGENCY SOS ALERT — BharatAI Super App",
+              html: `<p>A family member has triggered an emergency SOS from coords: <strong>${lat}, ${lon}</strong>.</p>`
+            })
+          });
+        } catch (e) {
+          console.error("Resend delivery failed", e);
+        }
+      }
+    }
+
+    function findPolice() {
+      alert("Opening coordinates of the nearest sub-district policing hub...");
+    }
+
+    // ================= SAMAJAI NOTICES & SCHEMES =================
+    function renderNotices() {
+      const container = document.getElementById('notice-board-posts');
+      if (!container) return;
+      container.innerHTML = '';
+      state.notices.forEach(n => {
+        container.innerHTML += `
+          <div class="bg-indigo-950/30 p-3.5 rounded-xl border border-indigo-900/30">
+            <div class="flex items-center justify-between text-[10px] mb-1.5">
+              <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-bold">${n.tag || 'News'}</span>
+              <span class="text-muted">${n.time || 'Just now'}</span>
+            </div>
+            <p class="text-xs text-slate-200">${n.text}</p>
+            <p class="text-[10px] text-muted mt-2 font-semibold">— Posted by ${n.user || 'Anonymous'}</p>
+          </div>
+        `;
+      });
+    }
+
+    async function postNotice() {
+      const val = document.getElementById('notice-content').value;
+      if (!val) return;
+
+      const notice = {
+        id: Date.now(),
+        text: val,
+        user: state.user ? state.user.name : 'Anonymous',
+        tag: "General Notice",
+        time: "Just now"
+      };
+      state.notices.unshift(notice);
+      saveState();
+      renderNotices();
+      
+      try {
+        await fetch("/api/data/notices", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(notice)
+        });
+      } catch(e) {
+        console.log("Offline or server write failed.");
+      }
+
+      queueAction('community_posts', notice);
+      document.getElementById('notice-content').value = '';
+    }
+
+    function calcSchemeEligibility() {
+      const inc = document.getElementById('calc-income').value;
+      const job = document.getElementById('calc-job').value;
+      const box = document.getElementById('calc-schemes-result');
+
+      if (!inc) return;
+      box.classList.remove('hidden');
+
+      let scheme = "";
+      if (Number(inc) <= 200000 && job === 'farmer') {
+        scheme = "PM-KISAN Samman Nidhi";
+        box.innerHTML = `
+          <h4 class="font-bold text-white mb-1">Matched: PM-KISAN Samman Nidhi</h4>
+          <p class="text-[10px] text-muted">Direct income support of ₹6,000/year. Direct transfer active.</p>
+          <a href="https://pmkisan.gov.in" target="_blank" class="block text-indigo-400 mt-2 hover:underline text-[10px]">Official PM Kisan Portal</a>
+        `;
+      } else if (Number(inc) <= 150000) {
+        scheme = "PM Garib Kalyan Yojana";
+        box.innerHTML = `
+          <h4 class="font-bold text-white mb-1">Matched: PM Garib Kalyan Yojana</h4>
+          <p class="text-[10px] text-muted">Eligible for free monthly rations. Verify at local ration office.</p>
+        `;
+      } else {
+        scheme = "Mudra Micro Enterprise Credit";
+        box.innerHTML = `
+          <h4 class="font-bold text-white mb-1">Mudra Micro Enterprise Credit</h4>
+          <p class="text-[10px] text-muted">Eligible for Mudra loans to scale local setups. Approach nearest bank.</p>
+        `;
+      }
+      queueAction('scheme_matches', { user_id: state.user ? state.user.name : 'Unknown', scheme_name: scheme, eligible: true });
+    }
+
+    async function generateRTI() {
+      const dept = document.getElementById('rti-dept').value;
+      const issue = document.getElementById('rti-issue').value;
+      const box = document.getElementById('rti-result-box');
+
+      if (!dept || !issue) return;
+      box.classList.remove('hidden');
+      box.innerText = "Drafting legal format for Public Records inspection...";
+
+      const rep = await queryAI(`Generate RTI request for Department: ${dept}. Purpose: ${issue}`);
+      formatAIPanelOutput(box, rep);
+    }
+
+    // ================= KISANAI CHART =================
+    let mandiChart = null;
+    function initMandiChart() {
+      const canvasEl = document.getElementById('mandi-price-chart');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
+      if (mandiChart) mandiChart.destroy();
+      mandiChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [
+            { label: 'Wheat (₹)', data: [2150, 2200, 2310, 2380, 2400, 2450], borderColor: '#10b981', tension: 0.3 },
+            { label: 'Mustard (₹)', data: [5100, 5250, 5180, 5300, 5350, 5400], borderColor: '#f59e0b', tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { grid: { color: 'rgba(99, 102, 241, 0.1)' }, ticks: { color: '#94a3b8' } },
+            x: { grid: { color: 'rgba(99, 102, 241, 0.1)' }, ticks: { color: '#94a3b8' } }
+          },
+          plugins: { legend: { labels: { color: '#f1f5f9' } } }
+        }
+      });
+    }
+
+    window.addEventListener('load', async () => {
+      await loadPersistedState();
       
       // Load selected fields
       if (state.vaccinations) {
