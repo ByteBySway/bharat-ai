@@ -1,54 +1,5 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
+const fetch = require('node-fetch');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(cors());
-app.use(express.json());
-
-// Path to local JSON database for offline/zero-setup persistence
-const DB_DIR = path.join(__dirname, 'data');
-const DB_PATH = path.join(DB_DIR, 'db.json');
-
-// Initialize database file
-try {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR);
-  }
-  if (!fs.existsSync(DB_PATH)) {
-    const initialDb = {
-      ledger: [
-        { id: 1, desc: "Sold 5 Liters Milk", amount: 300, type: "income" },
-        { id: 2, desc: "Seeds purchase", amount: 120, type: "expense" }
-      ],
-      shg: [
-        { id: 1, name: "Kusum Devi", amount: 500 },
-        { id: 2, name: "Renu Sharma", amount: 500 }
-      ],
-      notices: [
-        { id: 1, text: "Village Gram Panchayat meeting on water conservation this Friday at 4 PM.", user: "Sarpanch", tag: "Event", time: "2 hours ago" },
-        { id: 2, text: "Lost brown leather wallet near primary school. Contact Satish.", user: "Satish Kumar", tag: "Lost & Found", time: "1 day ago" }
-      ],
-      crm: []
-    };
-    fs.writeFileSync(DB_PATH, JSON.stringify(initialDb, null, 2));
-  }
-} catch (e) {
-  console.warn("Could not write local db.json database on read-only file system:", e.message);
-}
-
-// Serve static frontend files
-app.use(express.static(__dirname));
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Helper for local rule-based expert AI system
 function parseLocalExpertSystem(prompt, systemInstruction) {
   const p = prompt.toLowerCase();
   
@@ -86,14 +37,30 @@ function parseLocalExpertSystem(prompt, systemInstruction) {
   return `BharatAI Assistant (Server):\n\nYour query has been processed on the backend server. Let us know if you need specific application format drafting templates!`;
 }
 
-// 1. AI API Proxy Endpoint
-app.post('/api/ai', async (req, res) => {
+module.exports = async (req, res) => {
+  // CORS Preflight
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, x-api-key'
+  );
+
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: "Only POST requests are allowed" });
+  }
+
   const { prompt, systemInstruction } = req.body;
   const claudeKey = process.env.CLAUDE_API_KEY || req.headers['x-api-key'];
 
   if (claudeKey) {
     try {
-      // Direct Node.js fetch call to Anthropic API (bypassing browser CORS)
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -117,95 +84,6 @@ app.post('/api/ai', async (req, res) => {
     }
   }
 
-  // Fallback to local rule-based expert parser on the server
   const reply = parseLocalExpertSystem(prompt, systemInstruction);
   res.json({ text: reply });
-});
-
-// 2. Local Database GET Endpoint
-app.get('/api/data/:collection', async (req, res) => {
-  const collection = req.params.collection;
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnon = process.env.SUPABASE_ANON_KEY;
-
-  if (supabaseUrl && supabaseAnon) {
-    try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/${collection}?select=*`, {
-        method: "GET",
-        headers: {
-          "apikey": supabaseAnon,
-          "Authorization": `Bearer ${supabaseAnon}`
-        }
-      });
-      if (response.ok) {
-        const rows = await response.json();
-        return res.json(rows);
-      }
-    } catch (e) {
-      console.error("Supabase GET proxy failed. Falling back to local file database.", e);
-    }
-  }
-
-  try {
-    const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-    if (data[collection]) {
-      res.json(data[collection]);
-    } else {
-      res.json([]);
-    }
-  } catch (e) {
-    res.status(500).json({ error: "Failed to read data" });
-  }
-});
-
-// 3. Local Database POST Endpoint
-app.post('/api/data/:collection', async (req, res) => {
-  const collection = req.params.collection;
-  const payload = req.body;
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnon = process.env.SUPABASE_ANON_KEY;
-
-  if (supabaseUrl && supabaseAnon) {
-    try {
-      const response = await fetch(`${supabaseUrl}/rest/v1/${collection}`, {
-        method: "POST",
-        headers: {
-          "apikey": supabaseAnon,
-          "Authorization": `Bearer ${supabaseAnon}`,
-          "Content-Type": "application/json",
-          "Prefer": "return=representation"
-        },
-        body: JSON.stringify(payload)
-      });
-      if (response.ok) {
-        const items = await response.json();
-        return res.json({ success: true, item: items[0] || payload });
-      }
-    } catch (e) {
-      console.error("Supabase POST proxy failed. Falling back to local file database.", e);
-    }
-  }
-
-  try {
-    const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-    if (!data[collection]) {
-      data[collection] = [];
-    }
-    
-    payload.id = Date.now();
-    data[collection].push(payload);
-    
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-    res.json({ success: true, item: payload });
-  } catch (e) {
-    res.status(500).json({ error: "Failed to write data" });
-  }
-});
-
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  app.listen(PORT, () => {
-    console.log(`BharatAI Server running on port ${PORT}`);
-  });
-}
-
-module.exports = app;
+};

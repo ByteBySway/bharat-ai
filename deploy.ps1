@@ -7,19 +7,14 @@ if (-not (Test-Path $envPath)) {
 }
 
 $envFile = Get-Content $envPath
-$tokenLine = $envFile | Select-String "^VERCEL_TOKEN="
-if (-not $tokenLine) {
-    Write-Error "VERCEL_TOKEN is not defined in your credentials file."
-    exit 1
-}
-
-$token = $tokenLine.ToString().Split('=')[1].Trim()
-$baseDir = "C:\Users\HP\.gemini\antigravity\scratch\bharatai"
-
-# Parse Supabase credentials
+$token = ""
 $supabaseUrl = ""
 $supabaseAnon = ""
+
 foreach ($line in $envFile) {
+    if ($line -match "^VERCEL_TOKEN=(.*)") {
+        $token = $Matches[1].Trim()
+    }
     if ($line -match "^SUPABASE_URL=(.*)") {
         $supabaseUrl = $Matches[1].Trim()
     }
@@ -28,27 +23,47 @@ foreach ($line in $envFile) {
     }
 }
 
+if (-not $token) {
+    Write-Error "VERCEL_TOKEN is not defined in your credentials file."
+    exit 1
+}
+
+$baseDir = "C:\Users\HP\.gemini\antigravity\scratch\bharatai"
+
 # Files to deploy
-$fileList = @("index.html", "server.js", "package.json", "vercel.json", "manifest.json", "sw.js")
-$jsonFiles = @()
+$fileList = @("index.html", "server.js", "package.json", "vercel.json", "manifest.json", "sw.js", "api/ai.js", "api/data/[collection].js")
+$filesArray = @()
 
 foreach ($fileName in $fileList) {
     $filePath = Join-Path $baseDir $fileName
-    if (Test-Path $filePath) {
+    if (Test-Path -LiteralPath $filePath) {
         Write-Host "Reading $fileName..." -ForegroundColor Cyan
         $content = [System.IO.File]::ReadAllText($filePath, [System.Text.Encoding]::UTF8)
-        $escaped = $content.Replace('\', '\\').Replace('"', '\"').Replace("`r", "").Replace("`n", '\n')
-        $jsonFiles += "{`"file`":`"$fileName`",`"data`":`"$escaped`"}"
-      } else {
+        $fileObj = @{
+            file = $fileName
+            data = $content
+        }
+        $filesArray += $fileObj
+    } else {
         Write-Warning "File $fileName not found. Skipping."
     }
 }
 
-$filesJoined = $jsonFiles -join ","
 Write-Host "Assembling full-stack payload with Supabase config..." -ForegroundColor Cyan
 
-$body = "{`"name`":`"bharat-ai`",`"files`":[$filesJoined],`"projectSettings`":{`"framework`":null},`"env`":{`"SUPABASE_URL`":`"$supabaseUrl`",`"SUPABASE_ANON_KEY`":`"$supabaseAnon`"}}"
+$payload = @{
+    name = "bharat-ai"
+    files = $filesArray
+    projectSettings = @{
+        framework = $null
+    }
+    env = @{
+        SUPABASE_URL = $supabaseUrl
+        SUPABASE_ANON_KEY = $supabaseAnon
+    }
+}
 
+$body = $payload | ConvertTo-Json -Depth 10 -Compress
 $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($body)
 
 $headers = @{
