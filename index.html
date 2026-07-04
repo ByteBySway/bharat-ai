@@ -348,9 +348,15 @@
             <p class="text-[10px] text-muted leading-tight" id="user-avatar-vill">Tigrana Village</p>
           </div>
           <canvas id="profile-qr" width="100" height="100" class="bg-white p-1 rounded"></canvas>
-          <button onclick="alert('Profile shared via WhatsApp template!')" class="text-[9px] text-indigo-400 font-bold flex items-center gap-1 hover:underline">
-            <i data-lucide="share-2" class="w-2.5 h-2.5"></i> Share QR Card
-          </button>
+          <div class="pt-1 flex flex-col gap-1 w-full text-center">
+            <button onclick="alert('Profile shared via WhatsApp template!')" class="text-[9px] text-indigo-400 font-bold flex items-center gap-1 justify-center hover:underline">
+              <i data-lucide="share-2" class="w-2.5 h-2.5"></i> Share QR Card
+            </button>
+            <!-- Data Export Option -->
+            <button onclick="exportUserData()" class="text-[9px] text-emerald-400 font-bold flex items-center gap-1 justify-center hover:underline">
+              <i data-lucide="download" class="w-2.5 h-2.5"></i> Download All Data
+            </button>
+          </div>
         </div>
       </div>
 
@@ -535,7 +541,7 @@
                 <h3 class="text-sm font-semibold tracking-wider text-muted uppercase flex items-center gap-2">
                   <i data-lucide="trending-up" class="w-4 h-4 text-amber-400"></i> Market Price Trends & Expected Costs
                 </h3>
-                <select id="mandi-crop-cost" onchange="calcAgriRevenue()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2 py-1 text-white">
+                <select id="mandi-crop-cost" onchange="calcAgriRevenue()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2.5 py-1 text-white">
                   <option value="wheat">Wheat (Kanak)</option>
                   <option value="mustard">Mustard (Sarso)</option>
                 </select>
@@ -581,35 +587,53 @@
 
           <!-- Soil & Crops Calendar Tab -->
           <div id="kisan-tab-soil" class="space-y-6 hidden">
-            <!-- Soil pH Score Ring -->
+            <!-- Soil pH and NPK inputs with circular SVG score ring -->
             <div class="glass rounded-xl p-5 space-y-4">
-              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Soil pH & Quality Analyzer</h3>
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Soil pH & NPK Quality Score Ring</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-2 text-xs">
+                  <div class="grid grid-cols-3 gap-1">
+                    <div>
+                      <label class="block text-muted text-[9px]">Nitrogen (N)</label>
+                      <input id="soil-n" type="number" value="80" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white text-[10px]" oninput="recalcSoilScore()">
+                    </div>
+                    <div>
+                      <label class="block text-muted text-[9px]">Phosphorus (P)</label>
+                      <input id="soil-p" type="number" value="65" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white text-[10px]" oninput="recalcSoilScore()">
+                    </div>
+                    <div>
+                      <label class="block text-muted text-[9px]">Potassium (K)</label>
+                      <input id="soil-k" type="number" value="70" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white text-[10px]" oninput="recalcSoilScore()">
+                    </div>
+                  </div>
                   <label class="block text-slate-300">Enter Soil pH Level: <span id="soil-ph-val" class="font-bold text-secondary">6.5</span></label>
-                  <input type="range" id="soil-ph" min="4" max="9" step="0.1" value="6.5" class="w-full accent-secondary" oninput="updateSoilPh(this.value)">
+                  <input type="range" id="soil-ph" min="4" max="9" step="0.1" value="6.5" class="w-full accent-secondary" oninput="updateSoilPh(this.value); recalcSoilScore()">
                   <p class="text-muted text-[10px]">Normal range: 6.0 - 7.5 for crops.</p>
                 </div>
-                <div class="bg-indigo-950/40 p-3 rounded border border-indigo-900 text-xs">
-                  <p class="font-bold text-white mb-1">pH Classification Result:</p>
-                  <p class="text-emerald-400" id="soil-ph-desc">Slightly Acidic - Ideal for Wheat, Potato, Barley.</p>
+                <div class="flex flex-col items-center justify-center p-3 bg-indigo-950/40 rounded border border-indigo-900">
+                  <svg width="80" height="80" class="transform -rotate-90">
+                    <circle cx="40" cy="40" r="32" stroke="rgba(99, 102, 241, 0.15)" stroke-width="6" fill="transparent" />
+                    <circle id="soil-score-circle" cx="40" cy="40" r="32" stroke="#10b981" stroke-width="6" fill="transparent" stroke-dasharray="200" stroke-dashoffset="40" />
+                  </svg>
+                  <p class="text-xs font-extrabold mt-1 text-white">Health Score: <span id="soil-score-txt" class="text-emerald-400">80%</span></p>
+                  <p class="text-[9px] text-muted" id="soil-ph-desc">Ideal for Rabi crops</p>
                 </div>
               </div>
             </div>
 
             <!-- Intercropping and rotations -->
             <div class="glass rounded-xl p-5 space-y-4">
-              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Seed Varieties & Intercropping Matcher</h3>
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Seed Varieties, Rotation & Intercropping Matcher</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div class="space-y-2">
                   <label class="block text-slate-300">Select Primary Crop</label>
                   <select id="kisan-inter-select" onchange="matchIntercropping()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
                     <option value="sugarcane">Sugarcane</option>
-                    <option value="wheat">Wheat</option>
-                    <option value="mustard">Mustard</option>
+                    <option value="wheat">Wheat (Rabi)</option>
+                    <option value="paddy">Paddy Rice (Kharif)</option>
                   </select>
                 </div>
-                <div id="kisan-intercropping-result" class="bg-indigo-950/30 p-3 rounded border border-indigo-900/60">
+                <div id="kisan-intercropping-result" class="bg-indigo-950/30 p-3 rounded border border-indigo-900/60 space-y-1">
                   <!-- Matcher output -->
                 </div>
               </div>
@@ -656,6 +680,20 @@
               <button onclick="alert('Submit application at nearest Rural Cooperatives Branch. Processing period: 7 Days.')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded text-xs font-bold text-white transition">
                 Submit KCC Intent
               </button>
+            </div>
+
+            <!-- Subsidies Finder -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">PM-KUSUM Solar Pump & Subsidy Finder</h3>
+              <div class="space-y-2 text-xs">
+                <select id="subsidy-crop" onchange="findSubsidies()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+                  <option value="pump">Solar Irrigation Pump (PM-KUSUM)</option>
+                  <option value="tractor">Tractor purchase (State subsidy)</option>
+                </select>
+                <div id="subsidy-result" class="bg-indigo-950/30 p-2.5 rounded border border-indigo-900/40">
+                  Select a category to view matched central and state subsidies.
+                </div>
+              </div>
             </div>
           </div>
 
@@ -729,7 +767,7 @@
             </h3>
             <p class="text-xs text-muted">Verify eligibility for crop insurance schemes.</p>
             <button onclick="checkInsuranceEligibility()" class="w-full py-2 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 rounded text-xs font-semibold">Verify Eligibility</button>
-            <div id="insurance-eligibility-result" class="hidden bg-slate-900/60 p-3 rounded border border-indigo-950 text-xs text-slate-300"></div>
+            <div id="insurance-eligibility-result" class="hidden bg-slate-900/60 p-3 rounded border border-indigo-900 text-xs text-slate-300"></div>
           </div>
         </div>
       </div>
@@ -1073,11 +1111,29 @@
           </div>
 
           <!-- Mind & Breathing Exercises Tab -->
-          <div id="health-tab-mental" class="glass rounded-xl p-5 space-y-4 hidden flex flex-col items-center">
-            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">4-7-8 Deep Breathing Meditation Circle</h3>
-            <p class="text-xs text-muted text-center max-w-sm">Inhale as the circle expands, hold while it stays large, and exhale as it contracts.</p>
-            <div class="flex items-center justify-center h-48">
-              <div class="breathe-circle"></div>
+          <div id="health-tab-mental" class="space-y-6 hidden">
+            <div class="glass rounded-xl p-5 flex flex-col items-center space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">4-7-8 Deep Breathing Meditation Circle</h3>
+              <p class="text-xs text-muted text-center max-w-sm">Inhale as the circle expands, hold while it stays large, and exhale as it contracts.</p>
+              <div class="flex items-center justify-center h-48">
+                <div class="breathe-circle"></div>
+              </div>
+            </div>
+
+            <!-- Sleep quality checker -->
+            <div class="glass rounded-xl p-5 space-y-4 text-xs">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Sleep Quality & Fatigue Index Calculator</h3>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-slate-300 mb-0.5">Hours Slept Last Night</label>
+                  <input id="sleep-hours" type="number" value="7" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white" oninput="calcSleepIndex()">
+                </div>
+                <div>
+                  <label class="block text-slate-300 mb-0.5">Times Woken Up</label>
+                  <input id="sleep-wakes" type="number" value="1" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white" oninput="calcSleepIndex()">
+                </div>
+              </div>
+              <p class="text-emerald-400 font-bold text-right" id="sleep-index-result">Sleep Efficiency: Optimal (88%)</p>
             </div>
           </div>
         </div>
@@ -1099,6 +1155,18 @@
               <div class="bg-indigo-950/30 p-2 rounded border border-indigo-900/40 flex justify-between">
                 <span>National Helpline</span>
                 <a href="tel:108" class="text-indigo-400 underline">Dial 108</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ayushman Bharat Checker -->
+          <div class="glass rounded-xl p-5 space-y-4 text-xs">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Ayushman Bharat Eligibility Checker</h3>
+            <div class="space-y-2">
+              <label class="block text-slate-300">Enter Household Size</label>
+              <input id="ayush-size" type="number" value="5" class="w-full bg-indigo-950 border border-indigo-900 rounded p-1 text-white" oninput="checkAyushmanEligibility()">
+              <div id="ayush-result" class="bg-indigo-950/20 p-2.5 rounded border border-indigo-900/50">
+                Matched: Eligible. Under PM-JAY cashless cover up to ₹5 Lakhs/year.
               </div>
             </div>
           </div>
@@ -1174,7 +1242,7 @@
                 <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Rural & Local Job Opportunities</h3>
                 <select id="job-role-filter" onchange="renderJobs()" class="bg-indigo-950 border border-indigo-900 text-xs rounded px-2.5 py-1 text-white">
                   <option value="all">All Sectors</option>
-                  <option value="govt">Government Schemes</option>
+                  <option value="govt">Government (MGNREGA / Police)</option>
                   <option value="office">Office & Digital (Remote)</option>
                   <option value="field">Agri & Supervision</option>
                 </select>
@@ -1266,7 +1334,7 @@
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold flex items-center gap-2 text-amber-400">
           <i data-lucide="store"></i>
-          <span>DukaanAI Operator</span>
+          <span>DukaanAI Portal</span>
         </h2>
         <button onclick="navigateTo('home')" class="text-xs text-muted hover:text-white flex items-center gap-1">
           <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back Home
@@ -1278,6 +1346,7 @@
         <button onclick="toggleDukaanTabs('ledger')" id="dukaan-btn-ledger" class="text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none">Ledger Book</button>
         <button onclick="toggleDukaanTabs('inventory')" id="dukaan-btn-inventory" class="pb-1 focus:outline-none">Inventory & GST Setup</button>
         <button onclick="toggleDukaanTabs('marketing')" id="dukaan-btn-marketing" class="pb-1 focus:outline-none">Design Materials</button>
+        <button onclick="toggleDukaanTabs('growth')" id="dukaan-btn-growth" class="pb-1 focus:outline-none">Growth Advisory</button>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1411,6 +1480,19 @@
                   <canvas id="card-canvas" width="220" height="120" class="border border-indigo-900 rounded"></canvas>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Growth Advisor Tab -->
+          <div id="dukaan-tab-growth" class="glass rounded-xl p-5 space-y-4 hidden text-xs space-y-3">
+            <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">DukaanAI Expansion & Pricing Advisory</h3>
+            <div class="bg-indigo-950/20 p-3 rounded border border-indigo-900/40">
+              <h4 class="font-bold text-white mb-1">Competitor Strategy Advice</h4>
+              <p class="text-[11px] text-slate-300">Set margins at 12-15% for essential commodity groceries, and up to 25% for custom tailors or craft products.</p>
+            </div>
+            <div class="bg-indigo-950/20 p-3 rounded border border-indigo-900/40">
+              <h4 class="font-bold text-white mb-1">Export Opportunities</h4>
+              <p class="text-[11px] text-slate-300">Handicrafts and spices can be sold at high values outside your district via Meesho or ONDC registrations.</p>
             </div>
           </div>
         </div>
@@ -1647,6 +1729,27 @@
 
               <div id="notice-board-posts" class="space-y-3 max-h-[350px] overflow-y-auto custom-scroll">
                 <!-- Notice posts rendering -->
+              </div>
+            </div>
+
+            <!-- Village Classifieds Buy and Sell list -->
+            <div class="glass rounded-xl p-5 space-y-4">
+              <h3 class="text-sm font-semibold tracking-wider text-muted uppercase">Village classifieds (Buy & Sell)</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div class="bg-indigo-950/20 p-3 rounded border border-indigo-900/40 flex justify-between items-center">
+                  <div>
+                    <h4 class="font-bold text-white">Used Mini-Tractor (Mahindra)</h4>
+                    <p class="text-[10px] text-muted">Asking: ₹85,000</p>
+                  </div>
+                  <span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 font-bold">Contact Seller</span>
+                </div>
+                <div class="bg-indigo-950/20 p-3 rounded border border-indigo-900/40 flex justify-between items-center">
+                  <div>
+                    <h4 class="font-bold text-white">Fresh Crop Seeds (Wheat DBW)</h4>
+                    <p class="text-[10px] text-muted">Asking: ₹40/kg</p>
+                  </div>
+                  <span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 font-bold">Contact Seller</span>
+                </div>
               </div>
             </div>
           </div>
@@ -2013,6 +2116,17 @@
       localStorage.setItem('bharatai_state', JSON.stringify(state));
     }
 
+    // Export user session data locally as JSON file download
+    function exportUserData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "bharatai_data.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
     // ================= DUAL MOCK / REAL SUPABASE PERSISTENCE =================
     async function saveSupabaseRecord(tableName, payload) {
       const { supabaseUrl, supabaseAnon } = state.credentials;
@@ -2198,6 +2312,31 @@
       document.getElementById('key-resend').value = state.credentials.resend;
       document.getElementById('settings-modal').classList.remove('hidden');
       document.getElementById('settings-modal').classList.add('flex');
+    }
+
+    // Custom sleep advice logic
+    function calcSleepIndex() {
+      const hours = Number(document.getElementById('sleep-hours').value) || 0;
+      const wakes = Number(document.getElementById('sleep-wakes').value) || 0;
+      const box = document.getElementById('sleep-index-result');
+      
+      let score = 100 - (wakes * 10);
+      if (hours < 6) score -= 20;
+      if (score < 50) {
+        box.innerText = `Sleep Efficiency: Low (${score}%). Recommend early screen blackouts.`;
+      } else {
+        box.innerText = `Sleep Efficiency: Optimal (${score}%)`;
+      }
+    }
+
+    function checkAyushmanEligibility() {
+      const size = Number(document.getElementById('ayush-size').value) || 0;
+      const box = document.getElementById('ayush-result');
+      if (size >= 4) {
+        box.innerHTML = `Matched: Eligible. Under PM-JAY cashless cover up to ₹5 Lakhs/year.`;
+      } else {
+        box.innerHTML = `Under threshold criteria limit. Verify card parameters at nearest PHC.`;
+      }
     }
 
     function closeSettings() {
@@ -2550,6 +2689,19 @@
         updateSoilPh(document.getElementById('soil-ph').value);
         updateCropCalendar(document.getElementById('crop-cal-slider').value);
         matchIntercropping();
+        recalcSoilScore();
+      }
+    }
+
+    function findSubsidies() {
+      const cat = document.getElementById('subsidy-crop').value;
+      const box = document.getElementById('subsidy-result');
+      if (cat === 'pump') {
+        box.innerHTML = `🚜 **Central Subsidy (PM-KUSUM):**<br/>
+          Receive **90% subsidy** (60% state funding transfer + 30% bank loans) to install solar farming pumps.`;
+      } else {
+        box.innerHTML = `🚜 **State Equipment Scheme:**<br/>
+          Get **50% direct rebate** on seed drills and power tillers. Apply at Sub-district Agri Office.`;
       }
     }
 
@@ -2564,18 +2716,40 @@
         Transaction Date: May 20, 2026. Account: *XXXXX948`;
     }
 
+    function recalcSoilScore() {
+      const n = Number(document.getElementById('soil-n').value) || 0;
+      const p = Number(document.getElementById('soil-p').value) || 0;
+      const k = Number(document.getElementById('soil-k').value) || 0;
+      const ph = Number(document.getElementById('soil-ph').value) || 6.5;
+      
+      const phDiff = Math.abs(ph - 6.5);
+      const phMatch = phDiff < 1.0 ? 20 : 5;
+      
+      const totalScore = Math.min(100, Math.ceil((n/100)*30 + (p/80)*30 + (k/80)*30 + phMatch));
+      document.getElementById('soil-score-txt').innerText = `${totalScore}%`;
+      
+      const circle = document.getElementById('soil-score-circle');
+      if (circle) {
+        const offset = 200 - (totalScore / 100) * 200;
+        circle.setAttribute('stroke-dashoffset', offset);
+        if (totalScore < 50) circle.setAttribute('stroke', '#ef4444');
+        else if (totalScore < 75) circle.setAttribute('stroke', '#f59e0b');
+        else circle.setAttribute('stroke', '#10b981');
+      }
+    }
+
     function matchIntercropping() {
       const crop = document.getElementById('kisan-inter-select').value;
       const box = document.getElementById('kisan-intercropping-result');
       if (crop === 'sugarcane') {
         box.innerHTML = `🌱 **Intercrop:** Potato or Mustard.<br/>
-          **Advantage:** Boosts soil nitrogen cycles and provides short-term cash margins before Sugarcane maturation.`;
+          **Rotation next season:** Black Gram (Urad) to restore nitrogen indices.`;
       } else if (crop === 'wheat') {
         box.innerHTML = `🌱 **Intercrop:** Chickpea or Safflower.<br/>
-          **Advantage:** Restores potassium balances and breaks pest reproductive timelines.`;
+          **Rotation next season:** Moong Bean / Legumes.`;
       } else {
         box.innerHTML = `🌱 **Intercrop:** Lentils.<br/>
-          **Advantage:** High organic nitrogen fixation parameters.`;
+          **Rotation next season:** Mustard.`;
       }
     }
 
@@ -2641,7 +2815,20 @@
       resBox.innerText = "Analyzing plant symptoms with AI diagnostic model...";
       
       const res = await queryAI(`Crop: ${name}. Symptoms: ${symptom}`);
-      formatAIPanelOutput(resBox, res);
+      
+      // Pest Severity badge
+      let badge = `<span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold text-[9px] border border-amber-500/20">MODERATE RISK</span>`;
+      if (symptom.includes('wilt') || symptom.includes('rust')) {
+        badge = `<span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold text-[9px] border border-rose-500/20">HIGH SEVERITY</span>`;
+      }
+      
+      resBox.innerHTML = `
+        <div class="flex items-center justify-between pb-1.5 border-b border-indigo-900/40">
+          <span class="font-bold text-white text-[11px]">${name.toUpperCase()} REPORT</span>
+          ${badge}
+        </div>
+        <p class="pt-1.5">${res}</p>
+      `;
 
       const log = { crop: name, symptom: symptom, diagnosis: res, timestamp: new Date() };
       state.savedPlans.push(log);
@@ -3104,10 +3291,12 @@
       document.getElementById('dukaan-tab-ledger').classList.toggle('hidden', tabName !== 'ledger');
       document.getElementById('dukaan-tab-inventory').classList.toggle('hidden', tabName !== 'inventory');
       document.getElementById('dukaan-tab-marketing').classList.toggle('hidden', tabName !== 'marketing');
+      document.getElementById('dukaan-tab-growth').classList.toggle('hidden', tabName !== 'growth');
 
       document.getElementById('dukaan-btn-ledger').className = tabName === 'ledger' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('dukaan-btn-inventory').className = tabName === 'inventory' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       document.getElementById('dukaan-btn-marketing').className = tabName === 'marketing' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
+      document.getElementById('dukaan-btn-growth').className = tabName === 'growth' ? 'text-amber-400 border-b-2 border-amber-500 pb-1 focus:outline-none' : 'pb-1 focus:outline-none';
       
       if (tabName === 'inventory') {
         renderStockTable();
