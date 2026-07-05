@@ -74,9 +74,25 @@ $headers = @{
 Write-Host "Deploying to Vercel via REST API..." -ForegroundColor Cyan
 try {
     $res = Invoke-RestMethod -Uri "https://api.vercel.com/v13/deployments" -Method Post -Headers $headers -Body $bodyBytes
-    Write-Host "`n🎉 Deployment Successful!" -ForegroundColor Green
-    Write-Host "Live URL: https://$($res.url)" -ForegroundColor Yellow
+    Write-Host "`n🎉 Deployment Created!" -ForegroundColor Green
+    Write-Host "Deployment URL: https://$($res.url)" -ForegroundColor Yellow
     
+    # Wait until deployment is READY
+    Write-Host "Waiting for deployment to build and reach READY state..." -ForegroundColor Cyan
+    $status = ""
+    $attempts = 0
+    while ($status -ne "READY" -and $attempts -lt 30) {
+        Start-Sleep -Seconds 5
+        $check = Invoke-RestMethod -Uri "https://api.vercel.com/v13/deployments/$($res.id)" -Method Get -Headers $headers
+        $status = $check.readyState
+        $attempts++
+        Write-Host "Deployment state: $status (Attempt $attempts/30)" -ForegroundColor Yellow
+        if ($status -eq "ERROR") {
+            Write-Error "Deployment failed during Vercel build."
+            exit 1
+        }
+    }
+
     # Automatically map production alias
     Write-Host "Routing production domain to new build..." -ForegroundColor Cyan
     $aliasBody = @{ alias = "bharat-ai-sway.vercel.app" } | ConvertTo-Json

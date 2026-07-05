@@ -220,31 +220,60 @@
           </div>
           <div class="grid grid-cols-3 gap-2">
             <div>
-              <label class="block text-slate-300 mb-1">State</label>
+              <label class="block text-slate-300 mb-1">State/UT</label>
               <select id="profile-state" onchange="updateDistrictOptions()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
-                <option value="">Select State</option>
+                <option value="">Select State/UT</option>
+                <!-- 28 States -->
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Assam">Assam</option>
+                <option value="Bihar">Bihar</option>
+                <option value="Chhattisgarh">Chhattisgarh</option>
+                <option value="Goa">Goa</option>
+                <option value="Gujarat">Gujarat</option>
                 <option value="Haryana">Haryana</option>
-                <option value="Punjab">Punjab</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                <option value="Rajasthan">Rajasthan</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jharkhand">Jharkhand</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Madhya Pradesh">Madhya Pradesh</option>
                 <option value="Maharashtra">Maharashtra</option>
-                <option value="Other">Other (Custom)</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Punjab">Punjab</option>
+                <option value="Rajasthan">Rajasthan</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Telangana">Telangana</option>
+                <option value="Tripura">Tripura</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="West Bengal">West Bengal</option>
+                <!-- 8 Union Territories -->
+                <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
+                <option value="Chandigarh">Chandigarh</option>
+                <option value="Dadra and Nagar Haveli and Daman and Diu">Dadra and Nagar Haveli and Daman and Diu</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+                <option value="Ladakh">Ladakh</option>
+                <option value="Lakshadweep">Lakshadweep</option>
+                <option value="Puducherry">Puducherry</option>
               </select>
-              <input id="profile-state-custom" type="text" placeholder="Type State" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white mt-1 hidden">
             </div>
             <div>
               <label class="block text-slate-300 mb-1">District</label>
               <select id="profile-district" onchange="updateVillageOptions()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
                 <option value="">Select District</option>
               </select>
-              <input id="profile-district-custom" type="text" placeholder="Type District" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white mt-1 hidden">
             </div>
             <div>
               <label class="block text-slate-300 mb-1">Village</label>
-              <select id="profile-village" onchange="onVillageSelected()" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
+              <select id="profile-village" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white">
                 <option value="">Select Village</option>
               </select>
-              <input id="profile-village-custom" type="text" placeholder="Type Village" class="w-full bg-indigo-950 border border-indigo-900 rounded p-2 text-white mt-1 hidden">
             </div>
           </div>
         </div>
@@ -2324,120 +2353,189 @@
   <script>
     // ================= DYNAMIC LOCATION DICTIONARY =================
     const regionalData = {
+      "Andhra Pradesh": {
+        "Guntur": ["Tadikonda", "Amaravati", "Mangalagiri"],
+        "Visakhapatnam": ["Bheemili", "Anakapalle", "Gajuwaka"]
+      },
+      "Arunachal Pradesh": {
+        "Tawang": ["Jang", "Lumla", "Mukto"],
+        "Itanagar": ["Naharlagun", "Nirjuli", "Banderdewa"]
+      },
+      "Assam": {
+        "Kamrup": ["Hajo", "Palasbari", "Rangia"],
+        "Jorhat": ["Mariani", "Titabor", "Teok"]
+      },
+      "Bihar": {
+        "Patna": ["Danapur", "Phulwari Sharif", "Fatuha"],
+        "Gaya": ["Bodh Gaya", "Manpur", "Tekari"]
+      },
+      "Chhattisgarh": {
+        "Raipur": ["Arang", "Abhanpur", "Tilda"],
+        "Durg": ["Bhilai", "Patan", "Dhamdha"]
+      },
+      "Goa": {
+        "North Goa": ["Mapusa", "Ponda", "Bicholim"],
+        "South Goa": ["Margao", "Curchorem", "Canacona"]
+      },
+      "Gujarat": {
+        "Ahmedabad": ["Sanand", "Viramgam", "Dholka"],
+        "Surat": ["Bardoli", "Mahuva", "Olpad"]
+      },
       "Haryana": {
-        "Bhiwani": ["Tigrana", "Chang", "Guwani", "Kitlana"],
-        "Hisar": ["Adampur", "Barwala", "Narnaund", "Hansi"],
-        "Rohtak": ["Sampla", "Kalanaur", "Meham", "Lakhan Majra"]
+        "Bhiwani": ["Tigrana", "Chang", "Guwani"],
+        "Hisar": ["Adampur", "Barwala", "Hansi"]
       },
-      "Punjab": {
-        "Amritsar": ["Chogawan", "Ajnala", "Attari", "Majitha"],
-        "Ludhiana": ["Mullanpur", "Sahnewal", "Doraha", "Samrala"],
-        "Patiala": ["Nabha", "Rajpura", "Samana", "Patran"]
+      "Himachal Pradesh": {
+        "Kangra": ["Dharamshala", "Palampur", "Kangra Town"],
+        "Shimla": ["Rampur", "Theog", "Rohru"]
       },
-      "Uttar Pradesh": {
-        "Lucknow": ["Malihabad", "Bakshi Ka Talab", "Kakori", "Mohanlalganj"],
-        "Varanasi": ["Pindra", "Cholapur", "Harahua", "Kashi Vidyapeeth"],
-        "Mathura": ["Vrindavan", "Goverdhan", "Chhata", "Baldeo"]
+      "Jharkhand": {
+        "Ranchi": ["Kanke", "Ormanjhi", "Bundu"],
+        "Jamshedpur": ["Ghatshila", "Jugsalai", "Patamda"]
       },
-      "Rajasthan": {
-        "Jaipur": ["Amer", "Sanganer", "Chomu", "Bass"],
-        "Jodhpur": ["Luni", "Bilara", "Osian", "Shergarh"],
-        "Udaipur": ["Girwa", "Gogunda", "Mavli", "Salumber"]
+      "Karnataka": {
+        "Bengaluru Rural": ["Devanahalli", "Doddaballapura", "Nelamangala"],
+        "Mysore": ["Nanjangud", "Hunsur", "T Narasipura"]
+      },
+      "Kerala": {
+        "Ernakulam": ["Aluva", "Angamaly", "Kochi Rural"],
+        "Thiruvananthapuram": ["Neyyattinkara", "Nedumangad", "Varkala"]
+      },
+      "Madhya Pradesh": {
+        "Bhopal": ["Berasia", "Kolar", "Huzur"],
+        "Indore": ["Mhow", "Depalpur", "Sanwer"]
       },
       "Maharashtra": {
-        "Pune": ["Haveli", "Mulshi", "Maval", "Shirur"],
-        "Nagpur": ["Kamptee", "Hingna", "Katol", "Saoner"],
-        "Nashik": ["Niphad", "Sinnar", "Yeola", "Igatpuri"]
+        "Pune": ["Haveli", "Mulshi", "Maval"],
+        "Nagpur": ["Kamptee", "Hingna", "Katol"]
+      },
+      "Manipur": {
+        "Imphal East": ["Porompat", "Sawombung", "Keirao Bitra"],
+        "Imphal West": ["Lamphelpat", "Patsoi", "Wangoi"]
+      },
+      "Meghalaya": {
+        "East Khasi Hills": ["Mawphlang", "Sohra", "Mawsynram"],
+        "West Garo Hills": ["Tura", "Dalu", "Phulbari"]
+      },
+      "Mizoram": {
+        "Aizawl": ["Darlawn", "Phullen", "Sairang"],
+        "Lunglei": ["Hnahthial", "Lungsen", "Tlabung"]
+      },
+      "Nagaland": {
+        "Kohima": ["Chiephobozou", "Tseminyu", "Jakhama"],
+        "Dimapur": ["Chumoukedima", "Medziphema", "Niuland"]
+      },
+      "Odisha": {
+        "Khordha": ["Jatni", "Banapur", "Begunia"],
+        "Cuttack": ["Athagad", "Salipur", "Choudwar"]
+      },
+      "Punjab": {
+        "Amritsar": ["Chogawan", "Ajnala", "Attari"],
+        "Ludhiana": ["Mullanpur", "Sahnewal", "Doraha"]
+      },
+      "Rajasthan": {
+        "Jaipur": ["Amer", "Sanganer", "Chomu"],
+        "Jodhpur": ["Luni", "Bilara", "Osian"]
+      },
+      "Sikkim": {
+        "East Sikkim": ["Gangtok Rural", "Pakyong", "Rongli"],
+        "West Sikkim": ["Gyalshing", "Soreng", "Dentam"]
+      },
+      "Tamil Nadu": {
+        "Coimbatore": ["Pollachi", "Mettupalayam", "Sulur"],
+        "Madurai": ["Thirumangalam", "Melur", "Vadipatti"]
+      },
+      "Telangana": {
+        "Medchal-Malkajgiri": ["Ghatkesar", "Keesara", "Medchal"],
+        "Rangareddy": ["Rajendranagar", "Ibrahimpatnam", "Chevella"]
+      },
+      "Tripura": {
+        "West Tripura": ["Jirania", "Mohanpur", "Mandwi"],
+        "South Tripura": ["Belonia", "Sabroom", "Santirbazar"]
+      },
+      "Uttar Pradesh": {
+        "Lucknow": ["Malihabad", "Kakori", "Mohanlalganj"],
+        "Varanasi": ["Pindra", "Cholapur", "Harahua"]
+      },
+      "Uttarakhand": {
+        "Dehradun": ["Vikasnagar", "Rishikesh", "Kalsi"],
+        "Nainital": ["Haldwani", "Ramnagar", "Lalkuan"]
+      },
+      "West Bengal": {
+        "North 24 Parganas": ["Barasat Rural", "Basirhat", "Habra"],
+        "South 24 Parganas": ["Baruipur", "Canning", "Diamond Harbour"]
+      },
+      "Andaman and Nicobar Islands": {
+        "South Andaman": ["Port Blair Rural", "Ferrargunj", "Chouldari"],
+        "North and Middle Andaman": ["Mayabunder", "Diglipur", "Rangat"]
+      },
+      "Chandigarh": {
+        "Chandigarh": ["Manimajra", "Behlana", "Khuda Alisher"]
+      },
+      "Dadra and Nagar Haveli and Daman and Diu": {
+        "Dadra & Nagar Haveli": ["Silvassa", "Khanvel", "Masat"],
+        "Daman": ["Bhimpore", "Dunetha", "Marwad"]
+      },
+      "Delhi": {
+        "New Delhi": ["Chanakyapuri", "Connaught Place", "Delhi Cantt"],
+        "South Delhi": ["Mehrauli", "Saket", "Hauz Khas"]
+      },
+      "Jammu and Kashmir": {
+        "Srinagar": ["Ganderbal Border", "Hazratbal Rural", "Shalimar"],
+        "Jammu": ["Akhnoor", "R S Pura", "Bishnah"]
+      },
+      "Ladakh": {
+        "Leh": ["Kharu", "Nubra", "Khaltsi"],
+        "Kargil": ["Drass", "Sankoo", "Zanskar"]
+      },
+      "Lakshadweep": {
+        "Lakshadweep": ["Kavaratti", "Agatti", "Minicoy"]
+      },
+      "Puducherry": {
+        "Puducherry": ["Oulgaret", "Ariyankuppam", "Villianur"],
+        "Karaikal": ["Neravy", "Nedungadu", "Kottucherry"]
       }
     };
 
     function updateDistrictOptions() {
       const stateSel = document.getElementById('profile-state');
       const distSel = document.getElementById('profile-district');
-      const distCustom = document.getElementById('profile-district-custom');
-      const stateCustom = document.getElementById('profile-state-custom');
       const villSel = document.getElementById('profile-village');
-      const villCustom = document.getElementById('profile-village-custom');
 
       const selectedState = stateSel.value;
       
       distSel.innerHTML = '<option value="">Select District</option>';
       villSel.innerHTML = '<option value="">Select Village</option>';
-      
-      distCustom.classList.add('hidden');
-      villCustom.classList.add('hidden');
 
-      if (selectedState === 'Other') {
-        stateCustom.classList.remove('hidden');
-        distSel.classList.add('hidden');
-        distCustom.classList.remove('hidden');
-        villSel.classList.add('hidden');
-        villCustom.classList.remove('hidden');
-      } else {
-        stateCustom.classList.add('hidden');
-        distSel.classList.remove('hidden');
-        villSel.classList.remove('hidden');
-
-        if (selectedState && regionalData[selectedState]) {
-          const districts = Object.keys(regionalData[selectedState]);
-          districts.forEach(dist => {
-            const opt = document.createElement('option');
-            opt.value = dist;
-            opt.innerText = dist;
-            distSel.appendChild(opt);
-          });
-          const otherOpt = document.createElement('option');
-          otherOpt.value = 'Other';
-          otherOpt.innerText = 'Other (Custom)';
-          distSel.appendChild(otherOpt);
-        }
+      if (selectedState && regionalData[selectedState]) {
+        const districts = Object.keys(regionalData[selectedState]);
+        districts.forEach(dist => {
+          const opt = document.createElement('option');
+          opt.value = dist;
+          opt.innerText = dist;
+          distSel.appendChild(opt);
+        });
       }
     }
 
     function updateVillageOptions() {
       const stateSel = document.getElementById('profile-state');
       const distSel = document.getElementById('profile-district');
-      const distCustom = document.getElementById('profile-district-custom');
       const villSel = document.getElementById('profile-village');
-      const villCustom = document.getElementById('profile-village-custom');
 
       const selectedState = stateSel.value;
       const selectedDist = distSel.value;
 
       villSel.innerHTML = '<option value="">Select Village</option>';
-      villCustom.classList.add('hidden');
 
-      if (selectedDist === 'Other') {
-        distCustom.classList.remove('hidden');
-        villSel.classList.add('hidden');
-        villCustom.classList.remove('hidden');
-      } else {
-        distCustom.classList.add('hidden');
-        villSel.classList.remove('hidden');
-
-        if (selectedState && selectedDist && regionalData[selectedState] && regionalData[selectedState][selectedDist]) {
-          const villages = regionalData[selectedState][selectedDist];
-          villages.forEach(vill => {
-            const opt = document.createElement('option');
-            opt.value = vill;
-            opt.innerText = vill;
-            villSel.appendChild(opt);
-          });
-          const otherOpt = document.createElement('option');
-          otherOpt.value = 'Other';
-          otherOpt.innerText = 'Other (Custom)';
-          villSel.appendChild(otherOpt);
-        }
-      }
-    }
-
-    function onVillageSelected() {
-      const villSel = document.getElementById('profile-village');
-      const villCustom = document.getElementById('profile-village-custom');
-      if (villSel.value === 'Other') {
-        villCustom.classList.remove('hidden');
-      } else {
-        villCustom.classList.add('hidden');
+      if (selectedState && selectedDist && regionalData[selectedState] && regionalData[selectedState][selectedDist]) {
+        const villages = regionalData[selectedState][selectedDist];
+        villages.forEach(vill => {
+          const opt = document.createElement('option');
+          opt.value = vill;
+          opt.innerText = vill;
+          villSel.appendChild(opt);
+        });
       }
     }
 
@@ -2714,27 +2812,14 @@
     function saveUserProfile() {
       const name = document.getElementById('profile-name').value;
       const role = document.getElementById('profile-role').value;
-      
-      let stateVal = document.getElementById('profile-state').value;
-      if (stateVal === 'Other') {
-        stateVal = document.getElementById('profile-state-custom').value.trim();
-      }
-
-      let dist = document.getElementById('profile-district').value;
-      if (dist === 'Other' || stateVal === 'Other' || !dist) {
-        dist = document.getElementById('profile-district-custom').value.trim();
-      }
-
-      let vill = document.getElementById('profile-village').value;
-      if (vill === 'Other' || dist === 'Other' || stateVal === 'Other' || !vill) {
-        vill = document.getElementById('profile-village-custom').value.trim();
-      }
-
+      const stateVal = document.getElementById('profile-state').value;
+      const dist = document.getElementById('profile-district').value;
+      const vill = document.getElementById('profile-village').value;
       const age = document.getElementById('profile-age').value;
       const gen = document.getElementById('profile-gender').value;
 
       if (!name || !stateVal || !dist || !vill) {
-        alert("Please select or enter all details to register.");
+        alert("Please select all details to register.");
         return;
       }
 
