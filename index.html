@@ -2412,21 +2412,100 @@
       }
     }
 
+    function generateRealisticVillages(stateName, districtName) {
+      const famousVillages = {
+        "Bhiwani": ["Tigrana", "Chang", "Guwani", "Kitlana", "Mundhal Kalan", "Tosham"],
+        "Hisar": ["Adampur", "Barwala", "Narnaund", "Hansi Rural", "Sisai"],
+        "Amritsar": ["Chogawan", "Ajnala", "Attari", "Majitha", "Rayya"],
+        "Ludhiana": ["Mullanpur", "Sahnewal", "Doraha", "Samrala", "Khanna Rural"],
+        "Lucknow": ["Malihabad", "Bakshi Ka Talab", "Kakori", "Mohanlalganj", "Chinhat"],
+        "Varanasi": ["Pindra", "Cholapur", "Harahua", "Kashi Rural", "Sarnath Village"],
+        "Pune": ["Haveli", "Mulshi", "Maval", "Shirur", "Loni Kalbhor"],
+        "Nagpur": ["Kamptee", "Hingna", "Katol", "Saoner", "Kalmeshwar"],
+        "Patna": ["Danapur", "Phulwari Sharif", "Fatuha", "Maner", "Khusrupur"],
+        "Jaipur": ["Amer", "Sanganer", "Chomu", "Bassi", "Jamwa Ramgarh"],
+        "Jodhpur": ["Luni", "Bilara", "Osian", "Shergarh", "Piparcity"]
+      };
+
+      if (famousVillages[districtName]) {
+        return famousVillages[districtName];
+      }
+
+      const northWest = ["Haryana", "Punjab", "Rajasthan", "Himachal Pradesh", "Jammu and Kashmir", "Ladakh", "Uttarakhand"];
+      const centralNorth = ["Uttar Pradesh", "Bihar", "Madhya Pradesh", "Chhattisgarh", "Jharkhand", "Delhi", "Chandigarh"];
+      const western = ["Gujarat", "Maharashtra", "Goa", "Dadra and Nagar Haveli and Daman and Diu"];
+      const eastern = ["Odisha", "West Bengal", "Assam", "Sikkim", "Arunachal Pradesh", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Tripura", "Andaman and Nicobar Islands"];
+      const southern = ["Andhra Pradesh", "Telangana", "Karnataka", "Kerala", "Tamil Nadu", "Lakshadweep", "Puducherry"];
+
+      const base = districtName.replace(/\s+(Rural|Urban|Metropolitan|City|South|North|East|West)/g, "");
+
+      if (northWest.includes(stateName)) {
+        return [
+          `${base} Kalan`,
+          `${base} Khurd`,
+          `${base}was`,
+          `${base}wala`,
+          `${base}garh`,
+          `${base} Khera`
+        ];
+      } else if (centralNorth.includes(stateName)) {
+        return [
+          `${base}pur`,
+          `${base}ganj`,
+          `${base}abad`,
+          `${base} Kheri`,
+          `${base} Nagar`,
+          `${base} Dih`
+        ];
+      } else if (western.includes(stateName)) {
+        return [
+          `${base}gaon`,
+          `${base}oli`,
+          `${base}vali`,
+          `${base}wad`,
+          `${base}pada`,
+          `${base}khed`
+        ];
+      } else if (eastern.includes(stateName)) {
+        return [
+          `${base}para`,
+          `${base}gram`,
+          `${base}bari`,
+          `${base}hat`,
+          `${base}guri`,
+          `${base}tola`
+        ];
+      } else if (southern.includes(stateName)) {
+        return [
+          `${base}palle`,
+          `${base}puram`,
+          `${base}halli`,
+          `${base}ur`,
+          `${base}peta`,
+          `${base}kudi`
+        ];
+      }
+
+      return [
+        `${base} Rural`,
+        `${base} Block`,
+        `${base} Village`,
+        `${base} Center`
+      ];
+    }
+
     function updateVillageOptions() {
+      const stateSel = document.getElementById('profile-state');
       const distSel = document.getElementById('profile-district');
       const villSel = document.getElementById('profile-village');
 
+      const selectedState = stateSel.value;
       const selectedDist = distSel.value;
 
       villSel.innerHTML = '<option value="">Select Village</option>';
 
-      if (selectedDist) {
-        const villages = [
-          `${selectedDist} Village A`,
-          `${selectedDist} Village B`,
-          `${selectedDist} Town Center`,
-          `${selectedDist} Rural Sector`
-        ];
+      if (selectedState && selectedDist) {
+        const villages = generateRealisticVillages(selectedState, selectedDist);
         villages.forEach(vill => {
           const opt = document.createElement('option');
           opt.value = vill;
