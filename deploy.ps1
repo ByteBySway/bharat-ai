@@ -93,11 +93,15 @@ try {
         }
     }
 
-    # Automatically map production alias
-    Write-Host "Routing production domain to new build..." -ForegroundColor Cyan
-    $aliasBody = @{ alias = "bharat-ai-sway.vercel.app" } | ConvertTo-Json
-    $aliasRes = Invoke-RestMethod -Uri "https://api.vercel.com/v2/deployments/$($res.id)/aliases" -Method Post -Headers $headers -Body $aliasBody
-    Write-Host "Production URL: https://bharat-ai-sway.vercel.app" -ForegroundColor Green
+    # Automatically map production aliases
+    Write-Host "Routing production domains to new build..." -ForegroundColor Cyan
+    $aliasBody1 = @{ alias = "bharat-ai-app.vercel.app" } | ConvertTo-Json
+    $aliasRes1 = Invoke-RestMethod -Uri "https://api.vercel.com/v2/deployments/$($res.id)/aliases" -Method Post -Headers $headers -Body $aliasBody1
+    Write-Host "Production URL 1: https://bharat-ai-app.vercel.app" -ForegroundColor Green
+
+    $aliasBody2 = @{ alias = "bharat-ai-sway.vercel.app" } | ConvertTo-Json
+    $aliasRes2 = Invoke-RestMethod -Uri "https://api.vercel.com/v2/deployments/$($res.id)/aliases" -Method Post -Headers $headers -Body $aliasBody2
+    Write-Host "Production URL 2: https://bharat-ai-sway.vercel.app" -ForegroundColor Green
 } catch {
     Write-Error "Deployment failed: $_"
     if ($_.Exception.Response) {
